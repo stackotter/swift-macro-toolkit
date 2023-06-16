@@ -553,42 +553,48 @@ extension CodeBlockSyntax {
 }
 
 // TODO: Figure out a destructuring implementation that uses variadic generics (tricky without same type requirements)
-public func destructure<Element>(_ array: [Element]) -> ()? {
+public func destructure<Element>(_ elements: some Sequence<Element>) -> ()? {
+    let array = Array(elements)
     guard array.count == 0 else {
         return nil
     }
     return ()
 }
 
-public func destructure<Element>(_ array: [Element]) -> (Element)? {
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element)? {
+    let array = Array(elements)
     guard array.count == 1 else {
         return nil
     }
     return (array[0])
 }
 
-public func destructure<Element>(_ array: [Element]) -> (Element, Element)? {
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element)? {
+    let array = Array(elements)
     guard array.count == 2 else {
         return nil
     }
     return (array[0], array[1])
 }
 
-public func destructure<Element>(_ array: [Element]) -> (Element, Element, Element)? {
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element)? {
+    let array = Array(elements)
     guard array.count == 3 else {
         return nil
     }
     return (array[0], array[1], array[2])
 }
 
-public func destructure<Element>(_ array: [Element]) -> (Element, Element, Element, Element)? {
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element, Element)? {
+    let array = Array(elements)
     guard array.count == 4 else {
         return nil
     }
     return (array[0], array[1], array[2], array[3])
 }
 
-public func destructure<Element>(_ array: [Element]) -> (Element, Element, Element, Element, Element)? {
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element, Element, Element)? {
+    let array = Array(elements)
     guard array.count == 5 else {
         return nil
     }

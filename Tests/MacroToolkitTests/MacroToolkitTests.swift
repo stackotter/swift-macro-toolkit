@@ -1,5 +1,6 @@
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
+import SwiftDiagnostics
 import XCTest
 import MacroToolkitExamplePlugin
 
@@ -7,6 +8,7 @@ let testMacros: [String: Macro.Type] = [
     "AddAsync": AddAsyncMacro.self,
     "AddCompletionHandler": AddCompletionHandlerMacro.self,
     "CaseDetection": CaseDetectionMacro.self,
+    "addBlocker": AddBlocker.self,
 ]
 
 final class MacroToolkitTests: XCTestCase {
@@ -131,6 +133,30 @@ final class MacroToolkitTests: XCTestCase {
                 }
             }
             """,
+            macros: testMacros
+        )
+    }
+
+    func testAddBlockerMacro() {
+        assertMacroExpansion(
+            """
+            #addBlocker(1 + 2 * 3)
+            """,
+            expandedSource: """
+            1 - 2 * 3
+            """,
+            diagnostics: [
+                DiagnosticSpec(
+                    id: MessageID(domain: "ExampleMacros", id: "addBlocker"),
+                    message: "blocked an add; did you mean to subtract?",
+                    line: 1,
+                    column: 15,
+                    severity: .warning,
+                    fixIts: [
+                        FixItSpec(message: "use '-'")
+                    ]
+                )
+            ],
             macros: testMacros
         )
     }

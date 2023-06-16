@@ -38,11 +38,11 @@ public struct DiagnosticBuilder {
     var node: Syntax
     var message: String?
     var messageID = MessageID(domain: "UnknownDomain", id: "UnknownError")
+    var fixIts: [FixIt] = []
+    var highlights: [Syntax] = []
 
     /// Defaults to ``DiagnosticSeverity/error``.
     var severity: DiagnosticSeverity = .error
-
-    var fixIts: [FixIt] = []
 
     public init(for node: some SyntaxProtocol) {
         self.node = Syntax(node)
@@ -69,6 +69,12 @@ public struct DiagnosticBuilder {
     public func fixIt(_ fixIt: FixIt) -> Self {
         var builder = self
         builder.fixIts.append(fixIt)
+        return builder
+    }
+
+    public func highlight(_ node: some SyntaxProtocol) -> Self {
+        var builder = self
+        builder.highlights.append(Syntax(node))
         return builder
     }
 
@@ -110,6 +116,7 @@ public struct DiagnosticBuilder {
                 diagnosticID: messageID,
                 severity: severity
             ),
+            highlights: highlights,
             fixIts: fixIts
         )
     }
