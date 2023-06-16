@@ -135,12 +135,12 @@ public struct Function {
         _syntax.identifier.text
     }
 
-    public var returnType: String? {
-        _syntax.signature.output?.returnType.withoutTrivia().description
+    public var returnType: Type? {
+        (_syntax.signature.output?.returnType).map(Type.init)
     }
 
     public var returnsVoid: Bool {
-        returnType == "Void" || returnType == nil
+        returnType.isVoid
     }
 
     public var isAsync: Bool {
@@ -259,7 +259,7 @@ public struct Type {
     }
 
     public var description: String {
-        _syntax.description
+        _syntax.withoutTrivia().description
     }
 
     public var normalizedDescription: String {
@@ -450,24 +450,35 @@ extension FunctionDeclSyntax {
         )
     }
 
-    public func withReturnType(_ type: Type) -> FunctionDeclSyntax {
-        with(
-            \.signature,
-            signature
-                .with(
-                    \.output,
-                    ReturnClauseSyntax(
-                        leadingTrivia: " ",
-                        returnType: type._syntax
+    public func withReturnType(_ type: Type?) -> FunctionDeclSyntax {
+        if let type = type {
+            return with(
+                \.signature,
+                signature
+                    .with(
+                        \.output,
+                        ReturnClauseSyntax(
+                            leadingTrivia: " ",
+                            returnType: type._syntax
+                        )
                     )
-                )
-        )        
+            )
+        } else {
+            return with(\.signature, signature.with(\.output, nil))
+        }
     }
 
     public func withBody(_ codeBlock: CodeBlockSyntax) -> FunctionDeclSyntax {
         with(
             \.body,
             codeBlock
+        )
+    }
+
+    public func withBody(_ exprs: [ExprSyntax]) -> FunctionDeclSyntax {
+        with(
+            \.body,
+            CodeBlockSyntax(exprs)
         )
     }
 

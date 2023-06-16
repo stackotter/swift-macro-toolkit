@@ -3,6 +3,7 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import MacroToolkit
 
+// Modified from: https://github.com/DougGregor/swift-macro-examples/blob/f61ac7cdca8dc3557e53f86e7e03df1353908d3e/MacroExamplesPlugin/AddCompletionHandlerMacro.swift
 public struct AddCompletionHandlerMacro: PeerMacro {
     public static func expansion<
         Context: MacroExpansionContext,
@@ -14,33 +15,23 @@ public struct AddCompletionHandlerMacro: PeerMacro {
     ) throws -> [DeclSyntax] {
         // Only on functions at the moment. We could handle initializers as well
         // with a bit of work.
-        guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-            throw MacroError("@addCompletionHandler only works on functions")
+        guard let function = Function(declaration) else {
+            throw MacroError("@AddCompletionHandler only works on functions")
         }
 
         // This only makes sense for async functions.
-        if funcDecl.signature.effectSpecifiers?.asyncSpecifier == nil {
-            let newEffects: FunctionEffectSpecifiersSyntax
-            if let existingEffects = funcDecl.signature.effectSpecifiers {
-                newEffects = existingEffects.with(\.asyncSpecifier, "async ")
-            } else {
-                newEffects = FunctionEffectSpecifiersSyntax(asyncSpecifier: "async ")
-            }
-
-            let newSignature = funcDecl.signature.with(\.effectSpecifiers, newEffects)
+        guard function.isAsync else {
+            let newSignature = function._syntax.withAsyncModifier().signature
             let messageID = MessageID(domain: "MacroExamples", id: "MissingAsync")
 
-            let diag = Diagnostic(
-                // Where the error should go (on the "+").
-                node: Syntax(funcDecl.funcKeyword),
-                // The warning message and severity.
+            let diagnostic = Diagnostic(
+                node: Syntax(function._syntax.funcKeyword),
                 message: SimpleDiagnosticMessage(
                     message: "can only add a completion-handler variant to an 'async' function",
                     diagnosticID: messageID,
                     severity: .error
                 ),
                 fixIts: [
-                    // Fix-It to replace the '+' with a '-'.
                     FixIt(
                         message: SimpleDiagnosticMessage(
                             message: "add 'async'",
@@ -49,7 +40,7 @@ public struct AddCompletionHandlerMacro: PeerMacro {
                         ),
                         changes: [
                             FixIt.Change.replace(
-                                oldNode: Syntax(funcDecl.signature),
+                                oldNode: Syntax(function._syntax.signature),
                                 newNode: Syntax(newSignature)
                             )
                         ]
@@ -57,55 +48,34 @@ public struct AddCompletionHandlerMacro: PeerMacro {
                 ]
             )
 
-            context.diagnose(diag)
+            context.diagnose(diagnostic)
             return []
         }
 
         // Form the completion handler parameter.
-        let resultType: TypeSyntax? = funcDecl.signature.output?.returnType.with(
-            \.leadingTrivia, []
-        ).with(\.trailingTrivia, [])
+        let resultType: Type? = function.returnType
 
-        let completionHandlerParam =
+        let completionHandlerParameter =
             FunctionParameterSyntax(
                 firstName: .identifier("completionHandler"),
                 colon: .colonToken(trailingTrivia: .space),
-                type: "@escaping (\(resultType ?? "")) -> Void" as TypeSyntax
+                type: "@escaping (\(raw: resultType?.description ?? "")) -> Void" as TypeSyntax
             )
 
         // Add the completion handler parameter to the parameter list.
-        let parameterList = funcDecl.signature.input.parameterList
-        let newParameterList: FunctionParameterListSyntax
-        if let lastParam = parameterList.last {
-            // We need to add a trailing comma to the preceding list.
-            newParameterList = parameterList.removingLast()
-                .appending(
-                    lastParam.with(
-                        \.trailingComma,
-                        .commaToken(trailingTrivia: .space)
-                    )
-                )
-                .appending(completionHandlerParam)
-        } else {
-            newParameterList = parameterList.appending(completionHandlerParam)
-        }
+        let newParameters = function.parameters + [FunctionParameter(completionHandlerParameter)]
 
-        let callArguments: [String] = parameterList.map { param in
-            let argName = param.secondName ?? param.firstName
-
-            let paramName = param.firstName
-            if paramName.text != "_" {
-                return "\(paramName.text): \(argName.text)"
+        let callArguments = function.parameters.map { parameter in
+            if let label = parameter.label {
+                return "\(label): \(parameter.name)"
             }
 
-            return "\(argName.text)"
+            return "\(parameter.name)"
         }
 
         let call: ExprSyntax =
-            "\(funcDecl.identifier)(\(raw: callArguments.joined(separator: ", ")))"
+            "\(raw: function.identifier)(\(raw: callArguments.joined(separator: ", ")))"
 
-        // FIXME: We should make CodeBlockSyntax ExpressibleByStringInterpolation,
-        // so that the full body could go here.
         let newBody: ExprSyntax =
             """
             Task {
@@ -113,48 +83,16 @@ public struct AddCompletionHandlerMacro: PeerMacro {
             }
             """
 
-        // Drop the @addCompletionHandler attribute from the new declaration.
-        let newAttributeList = AttributeListSyntax(
-            funcDecl.attributes?.filter {
-                guard case let .attribute(attribute) = $0,
-                    let attributeType = attribute.attributeName.as(SimpleTypeIdentifierSyntax.self),
-                    let nodeType = node.attributeName.as(SimpleTypeIdentifierSyntax.self)
-                else {
-                    return true
-                }
-
-                return attributeType.name.text != nodeType.name.text
-            } ?? []
-        )
+        let newAttributes = function.attributes.removing(node)
 
         let newFunc =
-            funcDecl
-            .with(
-                \.signature,
-                funcDecl.signature
-                    .with(
-                        \.effectSpecifiers,
-                        funcDecl.signature.effectSpecifiers?.with(\.asyncSpecifier, nil)  // drop async
-                    )
-                    .with(\.output, nil)  // drop result type
-                    .with(
-                        \.input,  // add completion handler parameter
-                        funcDecl.signature.input.with(\.parameterList, newParameterList)
-                            .with(\.trailingTrivia, [])
-                    )
-            )
-            .with(
-                \.body,
-                CodeBlockSyntax(
-                    leftBrace: .leftBraceToken(leadingTrivia: .space),
-                    statements: CodeBlockItemListSyntax(
-                        [CodeBlockItemSyntax(item: .expr(newBody))]
-                    ),
-                    rightBrace: .rightBraceToken(leadingTrivia: .newline)
-                )
-            )
-            .with(\.attributes, newAttributeList)
-            .with(\.leadingTrivia, .newlines(2))
+            function._syntax
+            .withAsyncModifier(false)
+            .withReturnType(nil)
+            .withParameters(newParameters)
+            .withBody([newBody])
+            .withAttributes(newAttributes)
+            .withLeadingBlankLine()
 
         return [DeclSyntax(newFunc)]
     }
