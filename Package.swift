@@ -1,16 +1,15 @@
 // swift-tools-version: 5.9
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 import CompilerPluginSupport
 
 let package = Package(
-    name: "swift-macro-kit",
+    name: "swift-macro-utils",
     platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
     products: [
         .library(
-            name: "MacroKit",
-            targets: ["MacroKit"]
+            name: "MacroUtils",
+            targets: ["MacroUtils"]
         ),
     ],
     dependencies: [
@@ -19,19 +18,19 @@ let package = Package(
     targets: [
         // Implementations of macros tested by tests
         .macro(
-            name: "MacroKitExamplePlugin",
+            name: "MacroUtilsExamplePlugin",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-                "MacroKit"
+                "MacroUtils"
             ]
         ),
 
         // Declares macros used by tests
-        .target(name: "MacroKitExample", dependencies: ["MacroKitExamplePlugin"]),
+        .target(name: "MacroUtilsExample", dependencies: ["MacroUtilsExamplePlugin"]),
 
         .target(
-            name: "MacroKit",
+            name: "MacroUtils",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
@@ -39,9 +38,9 @@ let package = Package(
         ),
 
         .testTarget(
-            name: "MacroKitTests",
+            name: "MacroUtilsTests",
             dependencies: [
-                "MacroKitExample",
+                "MacroUtilsExample",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
