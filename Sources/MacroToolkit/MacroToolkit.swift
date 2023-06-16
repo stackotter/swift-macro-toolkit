@@ -209,9 +209,32 @@ public struct FunctionParameter {
         _syntax = syntax
     }
 
-    /// The external name for the parameter. `nil` if the in-source label is `_`.
+    /// - Parameter label: The in-source label to be declared. Use `"_"` to have no ``FunctionParameter/callSiteLabel``.
+    public init(label: String? = nil, name: String, type: Type) {
+        // TODO: Make the distinction between label and callSiteLabel more clear and well documented
+        _syntax = FunctionParameterSyntax(
+            firstName: TokenSyntax.identifier(label ?? name),
+            secondName: label == nil ? nil : TokenSyntax.identifier(name),
+            colon: .colonToken(trailingTrivia: .space),
+            type: type._syntax
+        )
+    }
+
+    /// The explicitly declared label for the parameter. For the label that is used
+    /// by callers, see ``FunctionParameter/callSiteLabel``.
     public var label: String? {
-        let label = _syntax.firstName.withoutTrivia().description
+        guard _syntax.secondName != nil else {
+            return nil
+        }
+        return _syntax.firstName.withoutTrivia().description
+    }
+
+    /// The label used by callers of the function.
+    public var callSiteLabel: String? {
+        guard let label = label else {
+            return name
+        }
+
         if label == "_" {
             return nil
         } else {
@@ -247,11 +270,15 @@ extension Sequence where Element == FunctionParameter {
 
 // TODO: Always normalize typed and pretend sugar doesn't exist (e.g. Int? looks like Optional<Int> to devs)
 /// Wraps type syntax (e.g. `Result<Success, Failure>`).
-public struct Type {
+public struct Type: SyntaxExpressibleByStringInterpolation {
     public var _syntax: TypeSyntax
 
     public init(_ syntax: TypeSyntax) {
         _syntax = syntax
+    }
+
+    public init(stringInterpolation: SyntaxStringInterpolation) {
+        _syntax = TypeSyntax(stringInterpolation: stringInterpolation)
     }
 
     public var _base: TypeSyntax {

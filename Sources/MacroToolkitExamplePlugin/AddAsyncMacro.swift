@@ -61,7 +61,7 @@ public struct AddAsyncMacro: PeerMacro {
         let filteredAttributes = function.attributes.removing(node)
 
         let callArguments: [String] = newParameters.map { parameter in
-            if let label = parameter.label {
+            if let label = parameter.callSiteLabel {
                 return "\(label): \(parameter.name)"
             }
             return parameter.name

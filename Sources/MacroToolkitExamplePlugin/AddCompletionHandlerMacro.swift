@@ -38,17 +38,16 @@ public struct AddCompletionHandlerMacro: PeerMacro {
 
         let resultType: Type? = function.returnType
         let completionHandlerParameter =
-            FunctionParameterSyntax(
-                firstName: .identifier("completionHandler"),
-                colon: .colonToken(trailingTrivia: .space),
-                type: "@escaping (\(raw: resultType?.description ?? "")) -> Void" as TypeSyntax
+            FunctionParameter(
+                name: "completionHandler",
+                type: "@escaping (\(raw: resultType?.description ?? "")) -> Void"
             )
 
         // Add the completion handler parameter to the parameter list.
-        let newParameters = function.parameters + [FunctionParameter(completionHandlerParameter)]
+        let newParameters = function.parameters + [completionHandlerParameter]
 
         let callArguments = function.parameters.map { parameter in
-            if let label = parameter.label {
+            if let label = parameter.callSiteLabel {
                 return "\(label): \(parameter.name)"
             }
 
