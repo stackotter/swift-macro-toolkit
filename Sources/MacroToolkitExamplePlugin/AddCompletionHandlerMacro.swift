@@ -22,39 +22,21 @@ public struct AddCompletionHandlerMacro: PeerMacro {
         // This only makes sense for async functions.
         guard function.isAsync else {
             let newSignature = function._syntax.withAsyncModifier().signature
-            let messageID = MessageID(domain: "MacroExamples", id: "MissingAsync")
-
-            let diagnostic = Diagnostic(
-                node: Syntax(function._syntax.funcKeyword),
-                message: SimpleDiagnosticMessage(
-                    message: "can only add a completion-handler variant to an 'async' function",
-                    diagnosticID: messageID,
-                    severity: .error
-                ),
-                fixIts: [
-                    FixIt(
-                        message: SimpleDiagnosticMessage(
-                            message: "add 'async'",
-                            diagnosticID: messageID,
-                            severity: .error
-                        ),
-                        changes: [
-                            FixIt.Change.replace(
-                                oldNode: Syntax(function._syntax.signature),
-                                newNode: Syntax(newSignature)
-                            )
-                        ]
-                    )
-                ]
-            )
+            let diagnostic = DiagnosticBuilder(for: function._syntax.funcKeyword)
+                .message("can only add a completion-handler variant to an 'async' function")
+                .messageID(domain: "AddCompletionHandlerMacro", id: "MissingAsync")
+                .suggestReplacement(
+                    "add 'async'",
+                    old: function._syntax.signature,
+                    new: newSignature
+                )
+                .build()
 
             context.diagnose(diagnostic)
             return []
         }
 
-        // Form the completion handler parameter.
         let resultType: Type? = function.returnType
-
         let completionHandlerParameter =
             FunctionParameterSyntax(
                 firstName: .identifier("completionHandler"),
@@ -83,7 +65,7 @@ public struct AddCompletionHandlerMacro: PeerMacro {
             }
             """
 
-        let newAttributes = function.attributes.removing(node)
+        let filteredAttributes = function.attributes.removing(node)
 
         let newFunc =
             function._syntax
@@ -91,7 +73,7 @@ public struct AddCompletionHandlerMacro: PeerMacro {
             .withReturnType(nil)
             .withParameters(newParameters)
             .withBody([newBody])
-            .withAttributes(newAttributes)
+            .withAttributes(filteredAttributes)
             .withLeadingBlankLine()
 
         return [DeclSyntax(newFunc)]
