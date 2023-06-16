@@ -3,12 +3,16 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-enum CustomError: Error {
-    case message(String)
+public struct MacroError: Error {
+    let message: String
+
+    public init(_ message: String) {
+        self.message = message
+    }
 }
 
 extension SyntaxProtocol {
-    func withoutTrivia() -> Self {
+    public func withoutTrivia() -> Self {
         var syntax = self
         syntax.leadingTrivia = []
         syntax.trailingTrivia = []
@@ -16,45 +20,45 @@ extension SyntaxProtocol {
     }
 }
 
-struct Function {
-    var _syntax: FunctionDeclSyntax
+public struct Function {
+    public var _syntax: FunctionDeclSyntax
 
-    init?(_ syntax: DeclSyntaxProtocol) {
+    public init?(_ syntax: DeclSyntaxProtocol) {
         guard let syntax = syntax.as(FunctionDeclSyntax.self) else {
             return nil
         }
         _syntax = syntax
     }
 
-    init(_ syntax: FunctionDeclSyntax) {
+    public init(_ syntax: FunctionDeclSyntax) {
         _syntax = syntax
     }
 
-    var identifier: String {
+    public var identifier: String {
         _syntax.identifier.text
     }
 
-    var returnType: String? {
+    public var returnType: String? {
         _syntax.signature.output?.returnType.withoutTrivia().description
     }
 
-    var returnsVoid: Bool {
+    public var returnsVoid: Bool {
         returnType == "Void" || returnType == nil
     }
 
-    var isAsync: Bool {
+    public var isAsync: Bool {
         _syntax.signature.effectSpecifiers?.asyncSpecifier != nil
     }
 
-    var isThrowing: Bool {
+    public var isThrowing: Bool {
         _syntax.signature.effectSpecifiers?.throwsSpecifier != nil
     }
 
-    var parameters: [FunctionParameter] {
+    public var parameters: [FunctionParameter] {
         Array(_syntax.signature.input.parameterList).map(FunctionParameter.init)
     }
 
-    var attributes: [AttributeListElement] {
+    public var attributes: [AttributeListElement] {
         _syntax.attributes.map(Array.init)?.map { attribute in
             switch attribute {
                 case .attribute(let attributeSyntax):
@@ -66,11 +70,11 @@ struct Function {
     }
 }
 
-enum AttributeListElement {
+public enum AttributeListElement {
     case attribute(Attribute)
     case conditionalCompilationBlock(ConditionalCompilationBlock)
 
-    var attribute: Attribute? {
+    public var attribute: Attribute? {
         switch self {
             case .attribute(let attribute):
                 return attribute
@@ -79,7 +83,7 @@ enum AttributeListElement {
         }
     }
 
-    var conditionalCompilationBlock: ConditionalCompilationBlock? {
+    public var conditionalCompilationBlock: ConditionalCompilationBlock? {
         switch self {
             case .conditionalCompilationBlock(let conditionalCompilationBlock):
                 return conditionalCompilationBlock
@@ -89,23 +93,23 @@ enum AttributeListElement {
     }
 }
 
-struct ConditionalCompilationBlock {
-    var _syntax: IfConfigDeclSyntax
+public struct ConditionalCompilationBlock {
+    public var _syntax: IfConfigDeclSyntax
 
-    init(_ syntax: IfConfigDeclSyntax) {
+    public init(_ syntax: IfConfigDeclSyntax) {
         _syntax = syntax
     }
 }
 
-struct FunctionParameter {
-    var _syntax: FunctionParameterSyntax
+public struct FunctionParameter {
+    public var _syntax: FunctionParameterSyntax
 
-    init(_ syntax: FunctionParameterSyntax) {
+    public init(_ syntax: FunctionParameterSyntax) {
         _syntax = syntax
     }
 
     /// The external name for the parameter. `nil` if the in-source label is `_`.
-    var label: String? {
+    public var label: String? {
         let label = _syntax.firstName.withoutTrivia().description
         if label == "_" {
             return nil
@@ -115,17 +119,17 @@ struct FunctionParameter {
     }
 
     /// The internal name for the parameter.
-    var name: String {
+    public var name: String {
         (_syntax.secondName ?? _syntax.firstName).description
     }
 
-    var type: Type {
+    public var type: Type {
         Type(_syntax.type)
     }
 }
 
 extension Sequence where Element == FunctionParameter {
-    var asParameterList: FunctionParameterListSyntax {
+    public var asParameterList: FunctionParameterListSyntax {
         var list = FunctionParameterListSyntax([])
         // TODO: Avoid initializing array just to get count (if possible)
         let parameters = Array(self)
@@ -138,22 +142,23 @@ extension Sequence where Element == FunctionParameter {
     }
 }
 
-struct Type {
-    var _syntax: TypeSyntax
+// TODO: Always normalize typed and pretend sugar doesn't exist (e.g. Int? looks like Optional<Int> to devs)
+public struct Type {
+    public var _syntax: TypeSyntax
 
-    init(_ syntax: TypeSyntax) {
+    public init(_ syntax: TypeSyntax) {
         _syntax = syntax
     }
 
-    var _base: TypeSyntax {
+    public var _base: TypeSyntax {
         _syntax.as(AttributedTypeSyntax.self)?.baseType ?? _syntax
     }
 
-    var description: String {
+    public var description: String {
         _syntax.description
     }
 
-    var normalizedDescription: String {
+    public var normalizedDescription: String {
         // TODO: Normalize types nested within the type too (e.g. the parameter types of a function type)
         if let tupleSyntax = _syntax.as(TupleTypeSyntax.self) {
             if tupleSyntax.elements.count == 0 {
@@ -169,21 +174,21 @@ struct Type {
         }
     }
 
-    var isVoid: Bool {
+    public var isVoid: Bool {
         normalizedDescription == "Void"
     }
 
-    var asFunctionType: FunctionType? {
+    public var asFunctionType: FunctionType? {
         FunctionType(_base)
     }
 
-    var asNominalType: NominalType? {
+    public var asNominalType: NominalType? {
         NominalType(_base)
     }
 }
 
 extension Optional<Type> {
-    var isVoid: Bool {
+    public var isVoid: Bool {
         if let self = self {
             return self.isVoid
         } else {
@@ -192,82 +197,82 @@ extension Optional<Type> {
     }
 }
 
-struct FunctionType {
-    var _syntax: FunctionTypeSyntax
+public struct FunctionType {
+    public var _syntax: FunctionTypeSyntax
 
-    init?(from other: Type) {
+    public init?(from other: Type) {
         guard let type = other.asFunctionType else {
             return nil
         }
         self = type
     }
 
-    init(_ syntax: FunctionTypeSyntax) {
+    public init(_ syntax: FunctionTypeSyntax) {
         _syntax = syntax
     }
 
-    init?(_ syntax: TypeSyntax) {
+    public init?(_ syntax: TypeSyntax) {
         guard let syntax = syntax.as(FunctionTypeSyntax.self) else {
             return nil
         }
         _syntax = syntax
     }
 
-    var returnType: Type {
+    public var returnType: Type {
         Type(_syntax.output.returnType)
     }
 
-    var parameters: [Type] {
+    public var parameters: [Type] {
         _syntax.arguments.map(\.type).map(Type.init)
     }
 }
 
-struct NominalType {
-    var _syntax: SimpleTypeIdentifierSyntax
+public struct NominalType {
+    public var _syntax: SimpleTypeIdentifierSyntax
 
-    init?(from other: Type) {
+    public init?(from other: Type) {
         guard let type = other.asNominalType else {
             return nil
         }
         self = type
     }
 
-    init(_ syntax: SimpleTypeIdentifierSyntax) {
+    public init(_ syntax: SimpleTypeIdentifierSyntax) {
         _syntax = syntax
     }
 
-    init?(_ syntax: TypeSyntax) {
+    public init?(_ syntax: TypeSyntax) {
         guard let syntax = syntax.as(SimpleTypeIdentifierSyntax.self) else {
             return nil
         }
         _syntax = syntax
     }
 
-    var name: String {
+    public var name: String {
         _syntax.name.description
     }
 
-    var genericArguments: [Type]? {
+    public var genericArguments: [Type]? {
         _syntax.genericArgumentClause.map { clause in
             clause.arguments.map(\.argumentType).map(Type.init)
         }
     }
 }
 
-struct Attribute {
-    var _syntax: AttributeSyntax
+public struct Attribute {
+    public var _syntax: AttributeSyntax
 
-    init(_ syntax: AttributeSyntax) {
+    public init(_ syntax: AttributeSyntax) {
         _syntax = syntax
     }
 
-    var name: Type {
+    public var name: Type {
         Type(_syntax.attributeName)
     }
 }
 
 extension Sequence where Element == AttributeListElement {
-    var asAttributeList: AttributeListSyntax {
+    public var asAttributeList: AttributeListSyntax {
         var list = AttributeListSyntax([])
         for attribute in self {
             let element: AttributeListSyntax.Element
@@ -284,7 +289,7 @@ extension Sequence where Element == AttributeListElement {
 }
 
 extension Collection where Element == AttributeListElement {
-    func removing(_ attribute: AttributeSyntax) -> [AttributeListElement] {
+    public func removing(_ attribute: AttributeSyntax) -> [AttributeListElement] {
         filter { element in
             element.attribute?._syntax != attribute
         }
@@ -292,11 +297,11 @@ extension Collection where Element == AttributeListElement {
 }
 
 extension FunctionDeclSyntax {
-    var effectSpecifiersOrDefault: FunctionEffectSpecifiersSyntax {
+    public var effectSpecifiersOrDefault: FunctionEffectSpecifiersSyntax {
         signature.effectSpecifiers ?? FunctionEffectSpecifiersSyntax(leadingTrivia: " ", asyncSpecifier: nil, throwsSpecifier: nil)
     }
 
-    func withAsyncModifier(_ isPresent: Bool = true) -> FunctionDeclSyntax {
+    public func withAsyncModifier(_ isPresent: Bool = true) -> FunctionDeclSyntax {
         with(
             \.signature,
             signature
@@ -308,7 +313,7 @@ extension FunctionDeclSyntax {
         )
     }
     
-    func withThrowsModifier(_ isPresent: Bool = true) -> FunctionDeclSyntax {
+    public func withThrowsModifier(_ isPresent: Bool = true) -> FunctionDeclSyntax {
         with(
             \.signature,
             signature
@@ -320,7 +325,7 @@ extension FunctionDeclSyntax {
         )
     }
 
-    func withParameters(_ parameters: some Sequence<FunctionParameter>) -> FunctionDeclSyntax {
+    public func withParameters(_ parameters: some Sequence<FunctionParameter>) -> FunctionDeclSyntax {
         with(
             \.signature,
             signature
@@ -331,7 +336,7 @@ extension FunctionDeclSyntax {
         )
     }
 
-    func withReturnType(_ type: Type) -> FunctionDeclSyntax {
+    public func withReturnType(_ type: Type) -> FunctionDeclSyntax {
         with(
             \.signature,
             signature
@@ -345,21 +350,21 @@ extension FunctionDeclSyntax {
         )        
     }
 
-    func withBody(_ codeBlock: CodeBlockSyntax) -> FunctionDeclSyntax {
+    public func withBody(_ codeBlock: CodeBlockSyntax) -> FunctionDeclSyntax {
         with(
             \.body,
             codeBlock
         )
     }
 
-    func withAttributes(_ attributes: [AttributeListElement]) -> FunctionDeclSyntax {
+    public func withAttributes(_ attributes: [AttributeListElement]) -> FunctionDeclSyntax {
         with(
             \.attributes,
             attributes.asAttributeList
         )
     }
 
-    func withLeadingBlankLine() -> FunctionDeclSyntax {
+    public func withLeadingBlankLine() -> FunctionDeclSyntax {
         with(
             \.leadingTrivia,
             .newlines(2)
@@ -368,7 +373,7 @@ extension FunctionDeclSyntax {
 }
 
 extension CodeBlockSyntax {
-    init(_ exprs: [ExprSyntax]) {
+    public init(_ exprs: [ExprSyntax]) {
         self.init(
             leftBrace: .leftBraceToken(leadingTrivia: .space),
             statements: CodeBlockItemListSyntax(
@@ -382,121 +387,121 @@ extension CodeBlockSyntax {
 }
 
 // TODO: Figure out a destructuring implementation that uses variadic generics (tricky without same type requirements)
-func destructure<Element>(_ array: [Element]) -> ()? {
+public func destructure<Element>(_ array: [Element]) -> ()? {
     guard array.count == 0 else {
         return nil
     }
     return ()
 }
 
-func destructure<Element>(_ array: [Element]) -> (Element)? {
+public func destructure<Element>(_ array: [Element]) -> (Element)? {
     guard array.count == 1 else {
         return nil
     }
     return (array[0])
 }
 
-func destructure<Element>(_ array: [Element]) -> (Element, Element)? {
+public func destructure<Element>(_ array: [Element]) -> (Element, Element)? {
     guard array.count == 2 else {
         return nil
     }
     return (array[0], array[1])
 }
 
-func destructure<Element>(_ array: [Element]) -> (Element, Element, Element)? {
+public func destructure<Element>(_ array: [Element]) -> (Element, Element, Element)? {
     guard array.count == 3 else {
         return nil
     }
     return (array[0], array[1], array[2])
 }
 
-func destructure<Element>(_ array: [Element]) -> (Element, Element, Element, Element)? {
+public func destructure<Element>(_ array: [Element]) -> (Element, Element, Element, Element)? {
     guard array.count == 4 else {
         return nil
     }
     return (array[0], array[1], array[2], array[3])
 }
 
-func destructure<Element>(_ array: [Element]) -> (Element, Element, Element, Element, Element)? {
+public func destructure<Element>(_ array: [Element]) -> (Element, Element, Element, Element, Element)? {
     guard array.count == 5 else {
         return nil
     }
     return (array[0], array[1], array[2], array[3], array[4])
 }
 
-func destructure(_ type: NominalType) -> (String, ())? {
+public func destructure(_ type: NominalType) -> (String, ())? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-func destructure(_ type: NominalType) -> (String, (Type))? {
+public func destructure(_ type: NominalType) -> (String, (Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-func destructure(_ type: NominalType) -> (String, (Type, Type))? {
+public func destructure(_ type: NominalType) -> (String, (Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-func destructure(_ type: NominalType) -> (String, (Type, Type, Type))? {
+public func destructure(_ type: NominalType) -> (String, (Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type))? {
+public func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type, Type))? {
+public func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-func destructure(_ type: FunctionType) -> ((), Type)? {
+public func destructure(_ type: FunctionType) -> ((), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
-func destructure(_ type: FunctionType) -> ((Type), Type)? {
+public func destructure(_ type: FunctionType) -> ((Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
-func destructure(_ type: FunctionType) -> ((Type, Type), Type)? {
+public func destructure(_ type: FunctionType) -> ((Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
-func destructure(_ type: FunctionType) -> ((Type, Type, Type), Type)? {
+public func destructure(_ type: FunctionType) -> ((Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
-func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type), Type)? {
+public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
-func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type), Type)? {
+public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
-func destructure(_ type: Type) -> DestructuredType<()>? {
+public func destructure(_ type: Type) -> DestructuredType<()>? {
     if let type = type.asNominalType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
@@ -510,7 +515,7 @@ func destructure(_ type: Type) -> DestructuredType<()>? {
     }
 }
 
-func destructure(_ type: Type) -> DestructuredType<(Type)>? {
+public func destructure(_ type: Type) -> DestructuredType<(Type)>? {
     if let type = type.asNominalType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
@@ -524,7 +529,7 @@ func destructure(_ type: Type) -> DestructuredType<(Type)>? {
     }
 }
 
-func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
+public func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
     if let type = type.asNominalType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
@@ -538,7 +543,7 @@ func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
     }
 }
 
-func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
+public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
     if let type = type.asNominalType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
@@ -552,7 +557,7 @@ func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
     }
 }
 
-func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type)>? {
+public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type)>? {
     if let type = type.asNominalType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
@@ -566,7 +571,7 @@ func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type)>? {
     }
 }
 
-func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type)>? {
+public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type)>? {
     if let type = type.asNominalType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
@@ -580,112 +585,7 @@ func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type
     }
 }
 
-enum DestructuredType<TypeList> {
+public enum DestructuredType<TypeList> {
     case nominal(name: String, genericArguments: TypeList)
     case function(parameterTypes: TypeList, returnType: Type)
-}
-
-public struct AddAsyncMacro: PeerMacro {
-    public static func expansion<
-        Context: MacroExpansionContext,
-        Declaration: DeclSyntaxProtocol
-    >(
-        of node: AttributeSyntax,
-        providingPeersOf declaration: Declaration,
-        in context: Context
-    ) throws -> [DeclSyntax] {
-        // Only on functions at the moment.
-        guard let function = Function(declaration) else {
-            throw CustomError.message("@AddAsync only works on functions")
-        }
-
-        // This only makes sense for non async functions.
-        guard !function.isAsync else {
-            throw CustomError.message("@AddAsync requires a non async function")
-        }
-
-        // This only makes sense void functions
-        guard function.returnsVoid else {
-            throw CustomError.message("@AddAsync requires a function that returns void")
-        }
-
-        // Requires a completion handler block as last parameter
-        guard
-            let completionHandlerType = function.parameters.last?.type.asFunctionType
-        else {
-            throw CustomError.message("@AddAsync requires a function that has a completion handler as last parameter")
-        }
-
-        // Completion handler needs to return Void
-        guard completionHandlerType.returnType.isVoid else {
-            throw CustomError.message("@AddAsync requires a function that has a completion handler that returns Void")
-        }
-
-        guard let returnType = completionHandlerType.parameters.first else {
-            throw CustomError.message("@AddAsync requires a function that has a completion handler that has one parameter")
-        }
-
-        // Destructure return type
-        let successReturnType: Type
-        let isResultReturn: Bool
-        if case let .nominal("Result", (successType, _)) = destructure(returnType) {
-            isResultReturn = true
-            successReturnType = successType
-        } else {
-            isResultReturn = false
-            successReturnType = returnType
-        }
-
-        // Remove completionHandler and comma from the previous parameter
-        let newParameters = function.parameters.dropLast()
-
-        // Drop the @AddAsync attribute from the new declaration.
-        let filteredAttributes = function.attributes.removing(node)
-
-        let callArguments: [String] = newParameters.map { parameter in
-            if let label = parameter.label {
-                return "\(label): \(parameter.name)"
-            }
-            return parameter.name
-        }
-
-        let switchBody: ExprSyntax =
-            """
-            switch returnValue {
-                case .success(let value):
-                    continuation.resume(returning: value)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-            }
-            """
-
-        let newBody: ExprSyntax =
-            """
-            \(isResultReturn ? "try await withCheckedThrowingContinuation { continuation in" : "await withCheckedContinuation { continuation in")
-                \(raw: function.identifier)(\(raw: callArguments.joined(separator: ", "))) { returnValue in
-                    \(isResultReturn ? switchBody : "continuation.resume(returning: returnValue)")
-                }
-            }
-            """
-
-        // TODO: Make better codeblock init
-        let newFunc =
-            function._syntax
-            .withParameters(newParameters)
-            .withReturnType(successReturnType)
-            .withAsyncModifier()
-            .withThrowsModifier(isResultReturn)
-            .withBody(CodeBlockSyntax([newBody]))
-            .withAttributes(filteredAttributes)
-            .withLeadingBlankLine()
-
-        return [DeclSyntax(newFunc)]
-    }
-}
-
-@main
-struct MacroExamplePlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [
-        AddAsyncMacro.self
-    ]
 }

@@ -1,13 +1,13 @@
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-import MacroExampleMacros
+import MacroKitExamplePlugin
 
 let testMacros: [String: Macro.Type] = [
     "AddAsync": AddAsyncMacro.self,
 ]
 
-final class MacroExampleTests: XCTestCase {
+final class MacroKitTests: XCTestCase {
     func testMacro() {
         assertMacroExpansion(
             """
