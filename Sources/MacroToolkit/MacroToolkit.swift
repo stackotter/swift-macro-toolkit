@@ -3,6 +3,20 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
+extension String {
+    // The string but with its first character uppercased.
+    public var initialUppercased: String {
+        guard let initial = first else {
+            return self
+        }
+
+        return "\(initial.uppercased())\(dropFirst())"
+    }
+}
+
+/// A generic macro error. If you are making a widely used macro I'd encourage you
+/// to instead provide more detailed diagnostics through the diagnostics API that
+/// macros have access to.
 public struct MacroError: Error {
     let message: String
 
@@ -12,6 +26,7 @@ public struct MacroError: Error {
 }
 
 extension SyntaxProtocol {
+    /// - Returns: The syntax with trivia removed.
     public func withoutTrivia() -> Self {
         var syntax = self
         syntax.leadingTrivia = []
@@ -20,6 +35,99 @@ extension SyntaxProtocol {
     }
 }
 
+/// Wraps an enum declaration.
+public struct Enum {
+    public var _syntax: EnumDeclSyntax
+    
+    public init?(_ syntax: any DeclGroupSyntax) {
+        guard let syntax = syntax.as(EnumDeclSyntax.self) else {
+            return nil
+        }
+        _syntax = syntax
+    }
+
+    public init(_ syntax: EnumDeclSyntax) {
+        _syntax = syntax
+    }
+
+    public var identifier: String {
+        _syntax.identifier.withoutTrivia().text
+    }
+
+    public var cases: [EnumCase] {
+        _syntax.memberBlock.members
+            .compactMap { member in
+                member.decl.as(EnumCaseDeclSyntax.self)
+            }
+            .flatMap { syntax in
+                syntax.elements.map(EnumCase.init)
+            }
+    }
+}
+
+/// An enum case from an enum declaration.
+public struct EnumCase {
+    public var _syntax: EnumCaseElementSyntax
+
+    public init(_ syntax: EnumCaseElementSyntax) {
+        _syntax = syntax
+    }
+
+    /// The case's name
+    public var identifier: String {
+        _syntax.identifier.withoutTrivia().description
+    }
+
+    /// The value associated with the enum case (either associated or raw).
+    public var value: EnumCaseValue? {
+        if let rawValue = _syntax.rawValue {
+            return .rawValue(rawValue)
+        } else if let associatedValue = _syntax.associatedValue {
+            let parameters = Array(associatedValue.parameterList)
+                .map(EnumCaseAssociatedValueParameter.init)
+            return .associatedValue(parameters)
+        } else {
+            return nil
+        }
+    }
+}
+
+/// The value associate with a specific enum case declaration.
+public enum EnumCaseValue {
+    case associatedValue([EnumCaseAssociatedValueParameter])
+    case rawValue(InitializerClauseSyntax)
+}
+
+/// Wraps a function parameter's syntax.
+public struct EnumCaseAssociatedValueParameter {
+    public var _syntax: EnumCaseParameterSyntax
+
+    public init(_ syntax: EnumCaseParameterSyntax) {
+        _syntax = syntax
+    }
+
+    /// The external name for the parameter. `nil` if the in-source label is `_`.
+    public var label: String? {
+        let label = _syntax.firstName?.withoutTrivia().description
+
+        if label == "_" {
+            return nil
+        } else {
+            return label
+        }
+    }
+
+    /// The internal name for the parameter.
+    public var name: String? {
+        (_syntax.secondName ?? _syntax.firstName)?.description
+    }
+
+    public var type: Type {
+        Type(_syntax.type)
+    }
+}
+
+/// Wraps a function declaration.
 public struct Function {
     public var _syntax: FunctionDeclSyntax
 
@@ -70,6 +178,8 @@ public struct Function {
     }
 }
 
+/// Wraps an element of an attribute list (either an attribute, or a compile-time
+/// compilation block containing attributes to be conditionally compiled).
 public enum AttributeListElement {
     case attribute(Attribute)
     case conditionalCompilationBlock(ConditionalCompilationBlock)
@@ -93,6 +203,7 @@ public enum AttributeListElement {
     }
 }
 
+/// A compile-time conditional block (i.e. `#if ...`).
 public struct ConditionalCompilationBlock {
     public var _syntax: IfConfigDeclSyntax
 
@@ -101,6 +212,7 @@ public struct ConditionalCompilationBlock {
     }
 }
 
+/// Wraps a function parameter's syntax.
 public struct FunctionParameter {
     public var _syntax: FunctionParameterSyntax
 
@@ -129,6 +241,8 @@ public struct FunctionParameter {
 }
 
 extension Sequence where Element == FunctionParameter {
+    /// Converts the sequence into a comma separated parameter list (with each element's
+    /// trailing comma updated as needed).
     public var asParameterList: FunctionParameterListSyntax {
         var list = FunctionParameterListSyntax([])
         // TODO: Avoid initializing array just to get count (if possible)
@@ -143,6 +257,7 @@ extension Sequence where Element == FunctionParameter {
 }
 
 // TODO: Always normalize typed and pretend sugar doesn't exist (e.g. Int? looks like Optional<Int> to devs)
+/// Wraps type syntax (e.g. `Result<Success, Failure>`).
 public struct Type {
     public var _syntax: TypeSyntax
 
@@ -188,6 +303,7 @@ public struct Type {
 }
 
 extension Optional<Type> {
+    /// If `nil`, the type is considered void, otherwise the underlying type is queried.
     public var isVoid: Bool {
         if let self = self {
             return self.isVoid
@@ -197,7 +313,9 @@ extension Optional<Type> {
     }
 }
 
+/// Wraps a function type (e.g. `(Int, Double) -> Bool`).
 public struct FunctionType {
+    // TODO: Should give access to attributes such as `@escaping`.
     public var _syntax: FunctionTypeSyntax
 
     public init?(from other: Type) {
@@ -227,6 +345,7 @@ public struct FunctionType {
     }
 }
 
+/// Wraps a nominal type (e.g. `Result<Success, Failure>`).
 public struct NominalType {
     public var _syntax: SimpleTypeIdentifierSyntax
 
@@ -259,6 +378,7 @@ public struct NominalType {
     }
 }
 
+/// Wraps an attribute (e.g. `public` or `@dynamicMemberLookup`).
 public struct Attribute {
     public var _syntax: AttributeSyntax
 
@@ -272,6 +392,8 @@ public struct Attribute {
 }
 
 extension Sequence where Element == AttributeListElement {
+    /// Converts the sequence into the syntax for an attribute list (with each element's
+    /// trailing trivia updated appropriately).
     public var asAttributeList: AttributeListSyntax {
         var list = AttributeListSyntax([])
         for attribute in self {
@@ -289,6 +411,7 @@ extension Sequence where Element == AttributeListElement {
 }
 
 extension Collection where Element == AttributeListElement {
+    /// Removes any attributes matching the specified attribute, and returns the result.
     public func removing(_ attribute: AttributeSyntax) -> [AttributeListElement] {
         filter { element in
             element.attribute?._syntax != attribute
@@ -297,6 +420,8 @@ extension Collection where Element == AttributeListElement {
 }
 
 extension FunctionDeclSyntax {
+    /// Gets the signature's effect specifiers, or returns a default effect specifiers
+    /// syntax (without any specifiers).
     public var effectSpecifiersOrDefault: FunctionEffectSpecifiersSyntax {
         signature.effectSpecifiers ?? FunctionEffectSpecifiersSyntax(leadingTrivia: " ", asyncSpecifier: nil, throwsSpecifier: nil)
     }
@@ -373,6 +498,7 @@ extension FunctionDeclSyntax {
 }
 
 extension CodeBlockSyntax {
+    /// Creates a code block from an array of expressions.
     public init(_ exprs: [ExprSyntax]) {
         self.init(
             leftBrace: .leftBraceToken(leadingTrivia: .space),
@@ -585,6 +711,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
     }
 }
 
+/// A destructured type (e.g. `Result<Success, Failure>` => `.nominal(name: "Result", genericArguments: ("Success", "Failure"))`).
 public enum DestructuredType<TypeList> {
     case nominal(name: String, genericArguments: TypeList)
     case function(parameterTypes: TypeList, returnType: Type)

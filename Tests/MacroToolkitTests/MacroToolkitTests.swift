@@ -5,10 +5,11 @@ import MacroToolkitExamplePlugin
 
 let testMacros: [String: Macro.Type] = [
     "AddAsync": AddAsyncMacro.self,
+    "CaseDetection": CaseDetectionMacro.self,
 ]
 
 final class MacroToolkitTests: XCTestCase {
-    func testMacro() {
+    func testAddAsyncMacro() {
         assertMacroExpansion(
             """
             @Attribute1
@@ -35,6 +36,69 @@ final class MacroToolkitTests: XCTestCase {
                     d(a: a, for: b, value) { returnValue in
                         continuation.resume(returning: returnValue)
                     }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testCaseDetectionMacro() {
+        assertMacroExpansion(
+            """
+            @CaseDetection
+            enum Colours {
+                case red, gray(darkness: Int)
+            }
+
+            @CaseDetection
+            enum Colours: Int {
+                case red = 1, green = 2
+                case blue
+            }
+            """,
+            expandedSource: """
+
+            enum Colours {
+                case red, gray(darkness: Int)
+                var isRed: Bool {
+                    if case .red = self {
+                        return true
+                    }
+
+                    return false
+                }
+                var isGray: Bool {
+                    if case .gray = self {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            enum Colours: Int {
+                case red = 1, green = 2
+                case blue
+                var isRed: Bool {
+                    if case .red = self {
+                        return true
+                    }
+
+                    return false
+                }
+                var isGreen: Bool {
+                    if case .green = self {
+                        return true
+                    }
+
+                    return false
+                }
+                var isBlue: Bool {
+                    if case .blue = self {
+                        return true
+                    }
+
+                    return false
                 }
             }
             """,
