@@ -8,8 +8,8 @@ let package = Package(
     platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
     products: [
         .library(
-            name: "MacroUtils",
-            targets: ["MacroUtils"]
+            name: "MacroToolkit",
+            targets: ["MacroToolkit"]
         ),
     ],
     dependencies: [
@@ -18,19 +18,19 @@ let package = Package(
     targets: [
         // Implementations of macros tested by tests
         .macro(
-            name: "MacroUtilsExamplePlugin",
+            name: "MacroToolkitExamplePlugin",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-                "MacroUtils"
+                "MacroToolkit"
             ]
         ),
 
         // Declares macros used by tests
-        .target(name: "MacroUtilsExample", dependencies: ["MacroUtilsExamplePlugin"]),
+        .target(name: "MacroToolkitExample", dependencies: ["MacroToolkitExamplePlugin"]),
 
         .target(
-            name: "MacroUtils",
+            name: "MacroToolkit",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
@@ -38,9 +38,9 @@ let package = Package(
         ),
 
         .testTarget(
-            name: "MacroUtilsTests",
+            name: "MacroToolkitTests",
             dependencies: [
-                "MacroUtilsExample",
+                "MacroToolkitExample",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),

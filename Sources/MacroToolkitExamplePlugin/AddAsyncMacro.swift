@@ -1,8 +1,6 @@
-import SwiftCompilerPlugin
 import SwiftSyntax
-import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import MacroUtils
+import MacroToolkit
 
 public struct AddAsyncMacro: PeerMacro {
     public static func expansion<
@@ -100,11 +98,4 @@ public struct AddAsyncMacro: PeerMacro {
 
         return [DeclSyntax(newFunc)]
     }
-}
-
-@main
-struct MacroUtilsExamplePlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [
-        AddAsyncMacro.self
-    ]
 }
