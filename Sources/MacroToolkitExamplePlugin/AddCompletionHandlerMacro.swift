@@ -13,13 +13,10 @@ public struct AddCompletionHandlerMacro: PeerMacro {
         providingPeersOf declaration: Declaration,
         in context: Context
     ) throws -> [DeclSyntax] {
-        // Only on functions at the moment. We could handle initializers as well
-        // with a bit of work.
         guard let function = Function(declaration) else {
             throw MacroError("@AddCompletionHandler only works on functions")
         }
 
-        // This only makes sense for async functions.
         guard function.isAsync else {
             let newSignature = function._syntax.withAsyncModifier().signature
             let diagnostic = DiagnosticBuilder(for: function._syntax.funcKeyword)
@@ -36,43 +33,29 @@ public struct AddCompletionHandlerMacro: PeerMacro {
             return []
         }
 
-        let resultType: Type? = function.returnType
         let completionHandlerParameter =
             FunctionParameter(
                 name: "completionHandler",
-                type: "@escaping (\(raw: resultType?.description ?? "")) -> Void"
+                type: "@escaping (\(raw: function.returnType?.description ?? "")) -> Void"
             )
 
-        // Add the completion handler parameter to the parameter list.
-        let newParameters = function.parameters + [completionHandlerParameter]
-
-        let callArguments = function.parameters.map { parameter in
-            if let label = parameter.callSiteLabel {
-                return "\(label): \(parameter.name)"
-            }
-
-            return "\(parameter.name)"
-        }
-
-        let call: ExprSyntax =
-            "\(raw: function.identifier)(\(raw: callArguments.joined(separator: ", ")))"
-
-        let newBody: ExprSyntax =
-            """
-            Task {
-                completionHandler(await \(call))
-            }
-            """
-
-        let filteredAttributes = function.attributes.removing(node)
+        let callArguments = function.parameters.asPassthroughArguments
 
         let newFunc =
             function._syntax
             .withAsyncModifier(false)
             .withReturnType(nil)
-            .withParameters(newParameters)
-            .withBody([newBody])
-            .withAttributes(filteredAttributes)
+            .withParameters(function.parameters + [completionHandlerParameter])
+            .withBody([
+                """
+                Task {
+                    completionHandler(
+                        await \(raw: function.identifier)(\(raw: callArguments.joined(separator: ", ")))
+                    )
+                }
+                """
+            ])
+            .withAttributes(function.attributes.removing(node))
             .withLeadingBlankLine()
 
         return [DeclSyntax(newFunc)]

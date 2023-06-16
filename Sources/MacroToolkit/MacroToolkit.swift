@@ -266,6 +266,19 @@ extension Sequence where Element == FunctionParameter {
         }
         return list
     }
+
+    /// Converts the parameters into an argument list as would be used to passthrough the parameters to
+    /// another function with the same parameters (common when wrapping a function).
+    public var asPassthroughArguments: [String] {
+        // TODO: Make output strongly typed syntax instead of strings
+        map { parameter in
+            if let label = parameter.callSiteLabel {
+                return "\(label): \(parameter.name)"
+            }
+
+            return "\(parameter.name)"
+        }
+    }
 }
 
 // TODO: Always normalize typed and pretend sugar doesn't exist (e.g. Int? looks like Optional<Int> to devs)

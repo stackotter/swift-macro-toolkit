@@ -60,12 +60,7 @@ public struct AddAsyncMacro: PeerMacro {
         // Drop the @AddAsync attribute from the new declaration.
         let filteredAttributes = function.attributes.removing(node)
 
-        let callArguments: [String] = newParameters.map { parameter in
-            if let label = parameter.callSiteLabel {
-                return "\(label): \(parameter.name)"
-            }
-            return parameter.name
-        }
+        let callArguments = newParameters.asPassthroughArguments
 
         let switchBody: ExprSyntax =
             """

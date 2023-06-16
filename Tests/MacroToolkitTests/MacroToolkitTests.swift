@@ -62,7 +62,9 @@ final class MacroToolkitTests: XCTestCase {
             @After
             func f(a: Int, for b: String, _ value: Double, completionHandler: @escaping (String) -> Void) {
                 Task {
-                    completionHandler(await f(a: a, for: b, value))
+                    completionHandler(
+                        await f(a: a, for: b, value)
+                    )
                 }
             }
             """,
