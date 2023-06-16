@@ -5,6 +5,7 @@ import MacroToolkitExamplePlugin
 
 let testMacros: [String: Macro.Type] = [
     "AddAsync": AddAsyncMacro.self,
+    "AddCompletionHandler": AddCompletionHandlerMacro.self,
     "CaseDetection": CaseDetectionMacro.self,
 ]
 
@@ -12,30 +13,56 @@ final class MacroToolkitTests: XCTestCase {
     func testAddAsyncMacro() {
         assertMacroExpansion(
             """
-            @Attribute1
+            @Before
             @AddAsync
-            @Attribute2
-            public
+            @After
             func d(a: Int, for b: String, _ value: Double, completionBlock: @escaping (Bool) -> Void) {
                 completionBlock(true)
             }
             """,
             expandedSource: """
-            @Attribute1
-            @Attribute2
-            public
+            @Before
+            @After
             func d(a: Int, for b: String, _ value: Double, completionBlock: @escaping (Bool) -> Void) {
                 completionBlock(true)
             }
 
-            @Attribute1
-            @Attribute2
-            public
+            @Before
+            @After
             func d(a: Int, for b: String, _ value: Double)  async -> Bool {
                 await withCheckedContinuation { continuation in
                     d(a: a, for: b, value) { returnValue in
                         continuation.resume(returning: returnValue)
                     }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testAddCompletionHandlerMacro() {
+        assertMacroExpansion(
+            """
+            @Before
+            @AddCompletionHandler
+            @After
+            func f(a: Int, for b: String, _ value: Double) async -> String {
+                return b
+            }
+            """,
+            expandedSource: """
+            @Before
+            @After
+            func f(a: Int, for b: String, _ value: Double) async -> String {
+                return b
+            }
+
+            @Before
+            @After
+            func f(a: Int, for b: String, _ value: Double, completionHandler: @escaping (String) -> Void) {
+                Task {
+                    completionHandler(await f(a: a, for: b, value))
                 }
             }
             """,
