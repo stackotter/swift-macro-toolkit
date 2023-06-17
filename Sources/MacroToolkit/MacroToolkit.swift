@@ -290,6 +290,10 @@ public struct Type: SyntaxExpressibleByStringInterpolation {
         _syntax = syntax
     }
 
+    public init(_ syntax: any TypeSyntaxProtocol) {
+        _syntax = TypeSyntax(syntax)
+    }
+
     public init(stringInterpolation: SyntaxStringInterpolation) {
         _syntax = TypeSyntax(stringInterpolation: stringInterpolation)
     }
@@ -448,6 +452,104 @@ extension Collection where Element == AttributeListElement {
     }
 }
 
+public struct Expression {
+    public var _syntax: ExprSyntax
+
+    public init(_ syntax: ExprSyntax) {
+        _syntax = syntax
+    }
+
+    public init(_ syntax: any ExprSyntaxProtocol) {
+        _syntax = ExprSyntax(syntax)
+    }
+
+    /// Gets the contents of the expression if it's a string literal with no interpolation.
+    public var asSimpleStringLiteral: String? {
+        guard
+            let literal = _syntax.as(StringLiteralExprSyntax.self),
+            literal.segments.count == 1,
+            case let .stringSegment(segment)? = literal.segments.first
+        else {
+            return nil
+        }
+        return segment.content.text
+    }
+}
+
+public struct MacroAttribute {
+    public var _syntax: AttributeSyntax
+    public var _argumentListSyntax: TupleExprElementListSyntax
+
+    public init?(_ syntax: AttributeSyntax) {
+        guard case let .argumentList(arguments) = syntax.argument else {
+            return nil
+        }
+        _syntax = syntax
+        _argumentListSyntax = arguments
+    }
+
+    public func argument(labeled label: String) -> Expression? {
+        (_argumentListSyntax.first { element in
+            return element.label?.text == label
+        }?.expression).map(Expression.init)
+    }
+
+    public var arguments: [Expression] {
+        Array(_argumentListSyntax).map { argument in
+            Expression(argument.expression)
+        }
+    }
+
+    public var name: Type {
+        Type(_syntax.attributeName)
+    }
+}
+
+public struct Struct {
+    public var _syntax: StructDeclSyntax
+
+    public init(_ syntax: StructDeclSyntax) {
+        _syntax = syntax
+    }
+
+    public init?(_ syntax: any DeclGroupSyntax) {
+        guard let syntax = syntax.as(StructDeclSyntax.self) else {
+            return nil
+        }
+        _syntax = syntax
+    }
+
+    // TODO: Add members property to all declgroupsyntax decls through protocol default impl
+    public var members: [Decl] {
+        _syntax.memberBlock.members.map(\.decl).map(Decl.init)
+    }
+
+    public var inheritedTypes: [Type] {
+        _syntax.inheritanceClause?.inheritedTypeCollection.map(\.typeName).map(Type.init) ?? []
+    }
+}
+
+public struct Decl {
+    public var _syntax: DeclSyntax
+
+    public init(_ syntax: DeclSyntax) {
+        _syntax = syntax
+    }
+
+    public init(_ syntax: any DeclSyntaxProtocol) {
+        _syntax = DeclSyntax(syntax)
+    }
+
+    // TODO: Add conversions for all possible member types
+    public var asEnum: Enum? {
+        _syntax.as(EnumDeclSyntax.self).map(Enum.init)
+    }
+
+    public var asStruct: Struct? {
+        _syntax.as(StructDeclSyntax.self).map(Struct.init)
+    }
+}
+
 extension FunctionDeclSyntax {
     /// Gets the signature's effect specifiers, or returns a default effect specifiers
     /// syntax (without any specifiers).
@@ -552,6 +654,12 @@ extension CodeBlockSyntax {
     }
 }
 
+extension DeclGroupSyntax {
+    public var isPublic: Bool {
+        modifiers?.contains { $0.name.tokenKind == .keyword(.public) } == true
+    }
+}
+
 // TODO: Figure out a destructuring implementation that uses variadic generics (tricky without same type requirements)
 public func destructure<Element>(_ elements: some Sequence<Element>) -> ()? {
     let array = Array(elements)
@@ -561,7 +669,9 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> ()? {
     return ()
 }
 
-public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element)? {
+/// Named differently to allow type inference to still work correctly (single element tuples
+/// are weird in Swift).
+public func destructureSingle<Element>(_ elements: some Sequence<Element>) -> (Element)? {
     let array = Array(elements)
     guard array.count == 1 else {
         return nil
@@ -607,8 +717,10 @@ public func destructure(_ type: NominalType) -> (String, ())? {
     }
 }
 
-public func destructure(_ type: NominalType) -> (String, (Type))? {
-    destructure(type.genericArguments ?? []).map { arguments in
+/// Named differently to allow type inference to still work correctly (single element tuples
+/// are weird in Swift).
+public func destructureSingle(_ type: NominalType) -> (String, (Type))? {
+    destructureSingle(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
@@ -643,8 +755,10 @@ public func destructure(_ type: FunctionType) -> ((), Type)? {
     }
 }
 
-public func destructure(_ type: FunctionType) -> ((Type), Type)? {
-    destructure(type.parameters).map { parameters in
+/// Named differently to allow type inference to still work correctly (single element tuples
+/// are weird in Swift).
+public func destructureSingle(_ type: FunctionType) -> ((Type), Type)? {
+    destructureSingle(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
@@ -687,13 +801,15 @@ public func destructure(_ type: Type) -> DestructuredType<()>? {
     }
 }
 
-public func destructure(_ type: Type) -> DestructuredType<(Type)>? {
+/// Named differently to allow type inference to still work correctly (single element tuples
+/// are weird in Swift).
+public func destructureSingle(_ type: Type) -> DestructuredType<(Type)>? {
     if let type = type.asNominalType {
-        return destructure(type).map { destructured in
+        return destructureSingle(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
-        return destructure(type).map { destructured in
+        return destructureSingle(type).map { destructured in
             .function(parameterTypes: destructured.0, returnType: destructured.1)
         }
     } else {
