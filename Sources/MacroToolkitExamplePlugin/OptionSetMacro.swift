@@ -11,7 +11,6 @@ enum OptionSetMacroDiagnostic {
     case requiresStringLiteral(String)
     case requiresOptionsEnum(String)
     case requiresOptionsEnumRawType
-    case invalidAttribute
 }
 
 extension OptionSetMacroDiagnostic: DiagnosticMessage {
@@ -32,9 +31,6 @@ extension OptionSetMacroDiagnostic: DiagnosticMessage {
 
             case .requiresOptionsEnumRawType:
                 return "'OptionSet' macro requires a raw type"
-
-            case .invalidAttribute:
-                return "'OptionSet' macro attribute is invalid"
         }
     }
 
@@ -54,10 +50,7 @@ public struct OptionSetMacro {
         attachedTo decl: some DeclGroupSyntax,
         in context: some MacroExpansionContext
     ) -> (Struct, Enum, Type)? {
-        guard let attribute = MacroAttribute(attribute) else {
-            context.diagnose(OptionSetMacroDiagnostic.invalidAttribute.diagnose(at: attribute))
-            return nil
-        }
+        let attribute = MacroAttribute(attribute)
 
         // Determine the name of the options enum
         let optionsEnumName: String
@@ -134,7 +127,7 @@ extension OptionSetMacro: MemberMacro {
     ) throws -> [DeclSyntax] {
         // Decode the expansion arguments.
         guard
-            let (_, optionsEnum, rawType) = decodeExpansion(
+            let (structDecl, optionsEnum, rawType) = decodeExpansion(
                 of: attribute,
                 attachedTo: decl,
                 in: context
@@ -146,7 +139,7 @@ extension OptionSetMacro: MemberMacro {
         let cases = optionsEnum.cases
 
         // TODO: This seems wrong, surely other modifiers would also make sense to passthrough?
-        let access = decl.isPublic ? "public " : ""
+        let access = structDecl.isPublic ? "public " : ""
 
         let staticVars = cases.map { (case_) -> DeclSyntax in
             """

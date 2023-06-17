@@ -52,6 +52,10 @@ public struct Enum {
                 syntax.elements.map(EnumCase.init)
             }
     }
+
+    public var isPublic: Bool {
+        _syntax.isPublic
+    }
 }
 
 /// An enum case from an enum declaration.
@@ -78,6 +82,10 @@ public struct EnumCase {
         } else {
             return nil
         }
+    }
+
+    public func withoutValue() -> Self {
+        EnumCase(_syntax.with(\.rawValue, nil).with(\.associatedValue, nil))
     }
 }
 
@@ -478,24 +486,30 @@ public struct Expression {
 
 public struct MacroAttribute {
     public var _syntax: AttributeSyntax
-    public var _argumentListSyntax: TupleExprElementListSyntax
 
-    public init?(_ syntax: AttributeSyntax) {
-        guard case let .argumentList(arguments) = syntax.argument else {
+    public var _argumentListSyntax: TupleExprElementListSyntax? {
+        if case let .argumentList(arguments) = _syntax.argument {
+            return arguments
+        } else {
             return nil
         }
+    }
+
+    public init(_ syntax: AttributeSyntax) {
         _syntax = syntax
-        _argumentListSyntax = arguments
     }
 
     public func argument(labeled label: String) -> Expression? {
-        (_argumentListSyntax.first { element in
+        (_argumentListSyntax?.first { element in
             return element.label?.text == label
         }?.expression).map(Expression.init)
     }
 
     public var arguments: [Expression] {
-        Array(_argumentListSyntax).map { argument in
+        guard let argumentList = _argumentListSyntax else {
+            return []
+        }
+        return Array(argumentList).map { argument in
             Expression(argument.expression)
         }
     }
@@ -527,6 +541,10 @@ public struct Struct {
     public var inheritedTypes: [Type] {
         _syntax.inheritanceClause?.inheritedTypeCollection.map(\.typeName).map(Type.init) ?? []
     }
+
+    public var isPublic: Bool {
+        _syntax.isPublic
+    }
 }
 
 public struct Decl {
@@ -547,6 +565,32 @@ public struct Decl {
 
     public var asStruct: Struct? {
         _syntax.as(StructDeclSyntax.self).map(Struct.init)
+    }
+}
+
+extension DeclGroupSyntax {
+    /// Intended for use in generating user-facing messages. Use a more strongly typed
+    /// approach if actually checking the decl kind.
+    /// - Parameter article: If `true`, an appropriate article is included before the
+    ///   decl kind (e.g. `"a"` or `"an")
+    public func textualDeclKind(withArticle article: Bool = false) -> String {
+        // Modified from: https://github.com/DougGregor/swift-macro-examples/blob/f61ac7cdca8dc3557e53f86e7e03df1353908d3e/MacroExamplesPlugin/MetaEnumMacro.swift#L121
+        switch self {
+            case is ActorDeclSyntax:
+                return article ? "an actor" : "actor"
+            case is ClassDeclSyntax:
+                return article ? "a class" : "class"
+            case is ExtensionDeclSyntax:
+                return article ? "an extension" : "extension"
+            case is ProtocolDeclSyntax:
+                return article ? "a protocol" : "protocol"
+            case is StructDeclSyntax:
+                return article ? "a struct" : "struct"
+            case is EnumDeclSyntax:
+                return article ? "an enum" : "enum"
+            default:
+                return "unknown"
+        }
     }
 }
 

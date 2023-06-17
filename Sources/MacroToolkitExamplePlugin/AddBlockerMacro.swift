@@ -9,7 +9,7 @@ import MacroToolkit
 /// produce detailed diagnostics from a macro implementation for an utterly
 /// silly task: warning about every "add" (binary +) in the argument, with a
 /// Fix-It that changes it to a "-".
-public struct AddBlocker: ExpressionMacro {
+public struct AddBlockerMacro: ExpressionMacro {
     class AddVisitor: SyntaxRewriter {
         var diagnostics: [Diagnostic] = []
 

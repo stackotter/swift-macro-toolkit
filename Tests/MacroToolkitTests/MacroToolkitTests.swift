@@ -8,8 +8,9 @@ let testMacros: [String: Macro.Type] = [
     "AddAsync": AddAsyncMacro.self,
     "AddCompletionHandler": AddCompletionHandlerMacro.self,
     "CaseDetection": CaseDetectionMacro.self,
-    "addBlocker": AddBlocker.self,
-    "MyOptionSet": OptionSetMacro.self
+    "addBlocker": AddBlockerMacro.self,
+    "MyOptionSet": OptionSetMacro.self,
+    "MetaEnum": MetaEnumMacro.self,
 ]
 
 final class MacroToolkitTests: XCTestCase {
@@ -174,8 +175,8 @@ final class MacroToolkitTests: XCTestCase {
                     case standard
                 }
 
-                    static let express: ShippingOptions = [.nextDay, .secondDay]
-                    static let all: ShippingOptions = [.express, .priority, .standard]
+                static let express: ShippingOptions = [.nextDay, .secondDay]
+                static let all: ShippingOptions = [.express, .priority, .standard]
             }
             """,
             expandedSource: """
@@ -188,8 +189,8 @@ final class MacroToolkitTests: XCTestCase {
                     case standard
                 }
 
-                    static let express: ShippingOptions = [.nextDay, .secondDay]
-                    static let all: ShippingOptions = [.express, .priority, .standard]
+                static let express: ShippingOptions = [.nextDay, .secondDay]
+                static let all: ShippingOptions = [.express, .priority, .standard]
                 typealias RawValue = UInt8
                 var rawValue: RawValue
                 init() {
@@ -206,6 +207,44 @@ final class MacroToolkitTests: XCTestCase {
                     Self (rawValue: 1 << Options.priority.rawValue)
                 static let standard: Self =
                     Self (rawValue: 1 << Options.standard.rawValue)
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testMetaEnumMacro() {
+        assertMacroExpansion(
+            """
+            @MetaEnum
+            public enum Color {
+                case red, green, blue
+                case gray(darkness: Float)
+            }
+            """,
+            expandedSource: """
+
+            public enum Color {
+                case red, green, blue
+                case gray(darkness: Float)
+                public enum Meta {
+                    case red
+                case green
+                case blue
+                case gray
+                    public init(_ __macro_local_6parentfMu_: Color) {
+                        switch __macro_local_6parentfMu_ {
+                            case .red:
+                        self = .red
+                    case .green:
+                        self = .green
+                    case .blue:
+                        self = .blue
+                    case .gray:
+                        self = .gray
+                        }
+                    }
+                }
             }
             """,
             macros: testMacros
