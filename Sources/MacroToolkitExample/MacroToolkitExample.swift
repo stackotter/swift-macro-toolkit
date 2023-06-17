@@ -22,3 +22,11 @@ public macro MyOptionSet<RawType>() =
 @attached(member, names: named(Meta))
 public macro MetaEnum() =
     #externalMacro(module: "MacroToolkitExamplePlugin", type: "MetaEnumMacro")
+
+@attached(member)
+public macro CodableKey(name: String) =
+    #externalMacro(module: "MacroToolkitExamplePlugin", type: "CodableKeyMacro")
+
+@attached(member, names: named(CodingKeys))
+public macro CustomCodable() =
+    #externalMacro(module: "MacroToolkitExamplePlugin", type: "CustomCodableMacro")

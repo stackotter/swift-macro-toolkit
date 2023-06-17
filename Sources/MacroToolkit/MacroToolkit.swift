@@ -430,6 +430,10 @@ public struct Attribute {
     public var name: Type {
         Type(_syntax.attributeName)
     }
+
+    public var asMacroAttribute: MacroAttribute? {
+        MacroAttribute(_syntax)
+    }
 }
 
 extension Sequence where Element == AttributeListElement {
@@ -448,6 +452,13 @@ extension Sequence where Element == AttributeListElement {
             list = list.appending(element)
         }
         return list
+    }
+
+    public func first(called name: String) -> Attribute? {
+        // TODO: How should conditional compilation attributes be handled?
+        compactMap(\.attribute).first { attribute in
+            attribute.name.asNominalType?.name == name
+        }
     }
 }
 
@@ -547,6 +558,38 @@ public struct Struct {
     }
 }
 
+public struct Variable {
+    public var _syntax: VariableDeclSyntax
+
+    public init(_ syntax: VariableDeclSyntax) {
+        _syntax = syntax
+    }
+
+    public init?(_ syntax: DeclSyntax) {
+        guard let syntax = syntax.as(VariableDeclSyntax.self) else {
+            return nil
+        }
+        _syntax = syntax
+    }
+
+    public var identifiers: [String] {
+        _syntax.bindings.map(\.pattern).compactMap { pattern in
+            pattern.as(IdentifierPatternSyntax.self)?.identifier.text
+        }
+    }
+
+    public var attributes: [AttributeListElement] {
+        _syntax.attributes.map(Array.init)?.map { attribute in
+            switch attribute {
+                case .attribute(let attributeSyntax):
+                    return .attribute(Attribute(attributeSyntax))
+                case .ifConfigDecl(let ifConfigDeclSyntax):
+                    return .conditionalCompilationBlock(ConditionalCompilationBlock(ifConfigDeclSyntax))
+            }
+        } ?? []
+    }
+}
+
 public struct Decl {
     public var _syntax: DeclSyntax
 
@@ -565,6 +608,26 @@ public struct Decl {
 
     public var asStruct: Struct? {
         _syntax.as(StructDeclSyntax.self).map(Struct.init)
+    }
+
+    public var asVariable: Variable? {
+        _syntax.as(VariableDeclSyntax.self).map(Variable.init)
+    }
+}
+
+public struct DeclGroup {
+    public var _syntax: DeclGroupSyntax
+
+    public init(_ syntax: DeclGroupSyntax) {
+        _syntax = syntax
+    }
+
+    public var isPublic: Bool {
+        _syntax.isPublic
+    }
+
+    public var members: [Decl] {
+        _syntax.memberBlock.members.map(\.decl).map(Decl.init)
     }
 }
 

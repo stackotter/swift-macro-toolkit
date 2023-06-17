@@ -11,6 +11,8 @@ let testMacros: [String: Macro.Type] = [
     "addBlocker": AddBlockerMacro.self,
     "MyOptionSet": OptionSetMacro.self,
     "MetaEnum": MetaEnumMacro.self,
+    "CustomCodable": CustomCodableMacro.self,
+    "CodableKey": CodableKeyMacro.self,
 ]
 
 final class MacroToolkitTests: XCTestCase {
@@ -244,6 +246,38 @@ final class MacroToolkitTests: XCTestCase {
                         self = .gray
                         }
                     }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testCustomCodableMacro() {
+        assertMacroExpansion(
+            """
+            @CustomCodable
+            struct CustomCodableString: Codable {
+                @CodableKey(name: "OtherName")
+                var propertyWithOtherName: String
+
+                var propertyWithSameName: Bool
+
+                func randomFunction() {}
+            }
+            """,
+            expandedSource: """
+
+            struct CustomCodableString: Codable {
+                var propertyWithOtherName: String
+
+                var propertyWithSameName: Bool
+
+                func randomFunction() {
+                }
+                enum CodingKeys: String, CodingKey {
+                    case propertyWithOtherName = "OtherName"
+                case propertyWithSameName
                 }
             }
             """,
