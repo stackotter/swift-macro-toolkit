@@ -30,3 +30,9 @@ public macro CodableKey(name: String) =
 @attached(member, names: named(CodingKeys))
 public macro CustomCodable() =
     #externalMacro(module: "MacroToolkitExamplePlugin", type: "CustomCodableMacro")
+
+@attached(accessor)
+@attached(member, names: named(_storage))
+@attached(memberAttribute)
+public macro DictionaryStorage() =
+    #externalMacro(module: "MacroToolkitExamplePlugin", type: "DictionaryStorageMacro")

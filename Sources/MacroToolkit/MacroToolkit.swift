@@ -427,6 +427,12 @@ public struct Attribute {
         _syntax = syntax
     }
 
+    public init(named name: String) {
+        _syntax = AttributeSyntax(attributeName: SimpleTypeIdentifierSyntax(
+            name: .identifier("DictionaryStorage")
+        ))
+    }
+
     public var name: Type {
         Type(_syntax.attributeName)
     }
@@ -558,6 +564,38 @@ public struct Struct {
     }
 }
 
+public struct VariableBinding {
+    public var _syntax: PatternBindingSyntax
+
+    public init(_ syntax: PatternBindingSyntax) {
+        _syntax = syntax
+    }
+
+    public var accessors: [AccessorDeclSyntax] {
+        switch _syntax.accessor {
+            case .accessors(let block):
+                return Array(block.accessors)
+            case .getter(let getter):
+                // TODO: Avoid synthesising syntax here (wouldn't work with diagnostics)
+                return [AccessorDeclSyntax(accessorKind: .keyword(.get), body: getter)]
+            case .none:
+                return []
+        }
+    }
+
+    public var identifier: String? {
+        _syntax.pattern.as(IdentifierPatternSyntax.self)?.identifier.text
+    }
+
+    public var type: Type? {
+        (_syntax.typeAnnotation?.type).map(Type.init)
+    }
+
+    public var initialValue: Expression? {
+        (_syntax.initializer?.value).map(Expression.init)
+    }
+}
+
 public struct Variable {
     public var _syntax: VariableDeclSyntax
 
@@ -565,17 +603,19 @@ public struct Variable {
         _syntax = syntax
     }
 
-    public init?(_ syntax: DeclSyntax) {
+    public init?(_ syntax: any DeclSyntaxProtocol) {
         guard let syntax = syntax.as(VariableDeclSyntax.self) else {
             return nil
         }
         _syntax = syntax
     }
 
+    public var bindings: [VariableBinding] {
+        _syntax.bindings.map(VariableBinding.init)
+    }
+
     public var identifiers: [String] {
-        _syntax.bindings.map(\.pattern).compactMap { pattern in
-            pattern.as(IdentifierPatternSyntax.self)?.identifier.text
-        }
+        bindings.compactMap(\.identifier)
     }
 
     public var attributes: [AttributeListElement] {
@@ -587,6 +627,26 @@ public struct Variable {
                     return .conditionalCompilationBlock(ConditionalCompilationBlock(ifConfigDeclSyntax))
             }
         } ?? []
+    }
+
+    /// Determine whether this variable has the syntax of a stored property.
+    ///
+    /// This syntactic check cannot account for semantic adjustments due to,
+    /// e.g., accessor macros or property wrappers.
+    public var isStoredProperty: Bool {
+        guard let binding = destructureSingle(bindings) else {
+            return false
+        }
+
+        for accessor in binding.accessors {
+            switch accessor.accessorKind.tokenKind {
+                case .keyword(.willSet), .keyword(.didSet):
+                    break
+                default:
+                    return false
+            }
+        }
+        return true
     }
 }
 
@@ -629,6 +689,26 @@ public struct DeclGroup {
     public var members: [Decl] {
         _syntax.memberBlock.members.map(\.decl).map(Decl.init)
     }
+}
+
+extension SyntaxProtocol {
+    public func withLeadingNewline() -> Self {
+        with(\.leadingTrivia, leadingTrivia + [.newlines(1)])
+    }
+
+    public func indented(_ indentation: Indentation = .spaces(4)) -> Self {
+        switch indentation {
+            case .spaces(let spaces):
+                return with(\.leadingTrivia, leadingTrivia + [.spaces(spaces)])
+            case .tab:
+                return with(\.leadingTrivia, leadingTrivia + [.tabs(1)])
+        }
+    }
+}
+
+public enum Indentation {
+    case spaces(Int)
+    case tab
 }
 
 extension DeclGroupSyntax {

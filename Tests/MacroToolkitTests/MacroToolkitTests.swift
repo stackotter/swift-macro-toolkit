@@ -13,6 +13,7 @@ let testMacros: [String: Macro.Type] = [
     "MetaEnum": MetaEnumMacro.self,
     "CustomCodable": CustomCodableMacro.self,
     "CodableKey": CodableKeyMacro.self,
+    "DictionaryStorage": DictionaryStorageMacro.self,
 ]
 
 final class MacroToolkitTests: XCTestCase {
@@ -279,6 +280,42 @@ final class MacroToolkitTests: XCTestCase {
                     case propertyWithOtherName = "OtherName"
                 case propertyWithSameName
                 }
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    func testDictionaryStorageMacro() {
+        assertMacroExpansion(
+            """
+            @DictionaryStorage
+            struct Point {
+                var x: Int = 1
+                var y: Int = 2
+            }
+            """,
+            expandedSource: """
+
+            struct Point {
+                var x: Int = 1 {
+                    get {
+                        _storage["x", default: 1] as! Int
+                    }
+                    set {
+                        _storage["x"] = newValue
+                    }
+                }
+                var y: Int = 2 {
+                    get {
+                        _storage["y", default: 2] as! Int
+                    }
+                    set {
+                        _storage["y"] = newValue
+                    }
+                }
+
+                var _storage: [String: Any] = [:]
             }
             """,
             macros: testMacros
