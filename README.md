@@ -22,8 +22,9 @@ Swift has many different ways to express a single type. To name a few such cases
 `Int? == Optional<Int>`, and `[Int] == Array<Int>`. Swift Macro Toolkit strives to hide these details
 from you, so you don't have to handle all the edge cases.
 
+#### Before
+
 ```swift
-// MARK: Before
 func returnsVoid(_ function: FunctionDeclSyntax) -> Bool {
     // Function can either have no return type annotation, `()`, `Void`, or a nested single
     // element tuple with a Void-like inner type (e.g. `((((()))))` or `(((((Void)))))`)
@@ -48,15 +49,19 @@ func returnsVoid(_ function: FunctionDeclSyntax) -> Bool {
     }
     return isVoid(returnType)
 }
+```
 
-// MARK: After
+#### After
+
+```swift
 function.returnsVoid
 ```
 
 ### Type destructuring
 
+#### Before
+
 ```swift
-// MARK: Before
 guard
     let nominalReturnType = returnType.as(SimpleTypeIdentifierSyntax.self),
     nominalReturnType.name.description == "Result",
@@ -67,8 +72,11 @@ else {
 }
 let successType = genericArguments[0]
 let failureType = genericArguments[1]
+```
 
-// MARK: After
+#### After
+
+```swift
 guard
     case let .nominal("Result", (successType, failureType))? = destructure(Type(returnType))
 else {
@@ -78,8 +86,9 @@ else {
 
 ### Diagnostic creation
 
+#### Before
+
 ```swift
-// MARK: Before
 let diagnostic = Diagnostic(
     node: Syntax(funcDecl.funcKeyword),
     message: SimpleDiagnosticMessage(
@@ -103,8 +112,11 @@ let diagnostic = Diagnostic(
         ),
     ]
 )
+```
 
-// MARK: After
+#### After
+
+```swift
 let diagnostic = DiagnosticBuilder(for: function._syntax.funcKeyword)
     .message("can only add a completion-handler variant to an 'async' function")
     .messageID(domain: "AddCompletionHandlerMacro", id: "MissingAsync")
