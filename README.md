@@ -1,9 +1,9 @@
 # Swift Macro Toolkit
 
 **Did you know that `-0xF_ep-0_2` is a valid floating point literal in Swift?** Well you probably didn't
-(it's equal to -63.5), and as a macro author you shouldn't even have to care! Macro Toolkit shields
-you from edge cases so that users can use your macros in whatever weird (but correct) manners they
-may desire.
+(it's equal to -63.5), and as a macro author you shouldn't even have to care! Among many things, Macro
+Toolkit shields you from edge cases so that users can use your macros in whatever weird (but correct)
+manners they may desire.
 
 **You don't need in-depth knowledge of Swift's syntax to make a robust macro, you just need an idea.**
 
