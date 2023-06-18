@@ -193,7 +193,7 @@ return literal.value
 ```
 
 <details>
-  <summary>Without Macro Toolkit</summary
+  <summary>Without Macro Toolkit</summary>
 
   ```swift
   let segments = _syntax.segments.compactMap { (segment) -> String? in
