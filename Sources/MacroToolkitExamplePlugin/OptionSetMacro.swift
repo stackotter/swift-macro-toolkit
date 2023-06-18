@@ -55,7 +55,7 @@ public struct OptionSetMacro {
         // Determine the name of the options enum
         let optionsEnumName: String
         if let argument = attribute.argument(labeled: "optionsName") {
-            guard let stringLiteral = argument.asSimpleStringLiteral else {
+            guard let stringLiteral = argument.asStringLiteral?.value else {
                 context.diagnose(
                     OptionSetMacroDiagnostic
                         .requiresStringLiteral("optionsName")

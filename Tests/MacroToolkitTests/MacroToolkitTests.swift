@@ -3,6 +3,8 @@ import SwiftSyntaxMacrosTestSupport
 import SwiftDiagnostics
 import XCTest
 import MacroToolkitExamplePlugin
+import SwiftSyntax
+import MacroToolkit
 
 let testMacros: [String: Macro.Type] = [
     "AddAsync": AddAsyncMacro.self,
@@ -320,5 +322,92 @@ final class MacroToolkitTests: XCTestCase {
             """,
             macros: testMacros
         )
+    }
+
+    func testNumericLiteralParsing() {
+        let octalLiteral: ExprSyntax = "-0o600_015"
+        let binaryLiteral: ExprSyntax = "0b01_10__11"
+        let hexLiteral: ExprSyntax = "0xf_E"
+        let decimalLiteral: ExprSyntax = "1507"
+        XCTAssertEqual(IntegerLiteral(octalLiteral)?.value, -0o600_015)
+        XCTAssertEqual(IntegerLiteral(binaryLiteral)?.value, 0b01_10__11)
+        XCTAssertEqual(IntegerLiteral(hexLiteral)?.value, 0xfE)
+        XCTAssertEqual(IntegerLiteral(decimalLiteral)?.value, 1507)
+
+        let decimalFloatLiteral: ExprSyntax = "5_00_.01_00"
+        let hexFloatLiteral: ExprSyntax = "-0xFp-2_" // yep, that's valid Swift lol
+        let hexFloatLiteralWithFractional: ExprSyntax = "-0xF.0f_ep-2_"
+        XCTAssertEqual(FloatLiteral(decimalFloatLiteral)?.value, 5_00_.01_00)
+        XCTAssertEqual(FloatLiteral(hexFloatLiteral)?.value, -0xFp-2_)
+        XCTAssertEqual(FloatLiteral(hexFloatLiteralWithFractional)?.value, -0xF.0f_ep-2_, "Fair enough")
+    }
+
+    func testStringLiteralParsing() {
+        let basicLiteral: ExprSyntax = """
+        "Hello, world!"
+        """
+        let literalWithEscapeSequences: ExprSyntax = #"""
+        "My literal has \t a tab in the middle\n and a random newline \u{2023} \0 \r \\ \" \'"
+        """#
+        let multilineLiteral: ExprSyntax = #"""
+        """
+        This is a multiline literal!
+        """
+        """#
+        let rawLiteral: ExprSyntax = ###"""
+        ##"Hi \(name) \n \t \#t \##t \#(test)"##
+        """###
+        let literalWithInterpolation: ExprSyntax = #"""
+        "Hi \(name)"
+        """#
+
+        XCTAssertEqual(StringLiteral(basicLiteral)?.value, "Hello, world!")
+        XCTAssertEqual(
+            StringLiteral(literalWithEscapeSequences)?.value,
+            "My literal has \t a tab in the middle\n and a random newline \u{2023} \0 \r \\ \" \'"
+        )
+        XCTAssertEqual(
+            StringLiteral(rawLiteral)?.value,
+            ##"Hi \(name) \n \t \#t \##t \#(test)"##
+        )
+        XCTAssertEqual(
+            StringLiteral(multilineLiteral)?.value,
+            """
+            This is a multiline literal!
+            """
+        )
+
+        if let literal = StringLiteral(literalWithInterpolation) {
+            XCTAssertEqual(
+                literal.value,
+                nil
+            )
+        } else {
+            XCTFail("Failed to wrap string literal with interpolation")
+        }
+    }
+
+    func testRegexLiteralParsing() {
+        let basicLiteral: ExprSyntax = """
+        /abc/
+        """
+
+        // TODO: Figure out a more precise way to test regex literal parsing
+        XCTAssert((try? RegexLiteral(basicLiteral)?.regexValue()) != nil)
+    }
+
+    func testBooleanLiteralParsing() {
+        let trueLiteral: ExprSyntax = "true"
+        let falseLiteral: ExprSyntax = "false"
+
+        XCTAssertEqual(BooleanLiteral(trueLiteral)?.value, true)
+        XCTAssertEqual(BooleanLiteral(falseLiteral)?.value, false)
+    }
+
+    func testNilLiteralParsing() {
+        let nilLiteral: ExprSyntax = "nil"
+
+        // Pretty cursed
+        XCTAssert(NilLiteral(nilLiteral)?.value != nil)
     }
 }

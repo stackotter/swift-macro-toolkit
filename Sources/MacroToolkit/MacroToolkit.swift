@@ -2,6 +2,7 @@ import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
+import Foundation
 
 extension String {
     // The string but with its first character uppercased.
@@ -488,16 +489,373 @@ public struct Expression {
         _syntax = ExprSyntax(syntax)
     }
 
-    /// Gets the contents of the expression if it's a string literal with no interpolation.
-    public var asSimpleStringLiteral: String? {
-        guard
-            let literal = _syntax.as(StringLiteralExprSyntax.self),
-            literal.segments.count == 1,
-            case let .stringSegment(segment)? = literal.segments.first
-        else {
+    public var asStringLiteral: StringLiteral? {
+        StringLiteral(self._syntax)
+    }
+
+    public var asBooleanLiteral: BooleanLiteral? {
+        BooleanLiteral(self._syntax)
+    }
+
+    public var asFloatLiteral: FloatLiteral? {
+        FloatLiteral(self._syntax)
+    }
+
+    public var asIntegerLiteral: IntegerLiteral? {
+        IntegerLiteral(self._syntax)
+    }
+
+    public var asNilLiteral: NilLiteral? {
+        NilLiteral(self._syntax)
+    }
+
+    public var asRegexLiteral: RegexLiteral? {
+        RegexLiteral(self._syntax)
+    }
+}
+
+public struct StringLiteral: LiteralProtocol {
+    public var _syntax: StringLiteralExprSyntax
+
+    public init(_ syntax: StringLiteralExprSyntax) {
+        _syntax = syntax
+    }
+
+    /// `nil` if the literal contains string interpolation.
+    public var value: String? {
+        let segments = _syntax.segments.compactMap { (segment) -> String? in
+            guard case let .stringSegment(segment) = segment else {
+                return nil
+            }
+            return segment.content.text
+        }
+        guard segments.count == _syntax.segments.count else {
             return nil
         }
-        return segment.content.text
+
+        let map: [Character: Character] = [
+            "\\": "\\",
+            "n": "\n",
+            "r": "\r",
+            "t": "\t",
+            "0": "\0",
+            "\"": "\"",
+            "'": "'"
+        ]
+        let hexadecimalCharacters = "0123456789abcdefABCDEF"
+
+        // TODO: Modularise this code a bit to clean it up
+        // The length of the `\###...` sequence that starts an escape sequence (zero hashes if not a raw string)
+        let escapeSequenceDelimiterLength = (_syntax.openDelimiter?.text.count ?? 0) + 1
+        // Evaluate backslash escape sequences within each segment before joining them together
+        let transformedSegments = segments.map { segment in
+            var characters: [Character] = []
+            var inEscapeSequence = false
+            var iterator = segment.makeIterator()
+            var escapeSequenceDelimiterPosition = 0 // Tracks the current position in the delimiter if parsing one
+            while let c = iterator.next() {
+                if inEscapeSequence {
+                    if let replacement = map[c] {
+                        characters.append(replacement)
+                    } else if c == "u" {
+                        var count = 0
+                        var digits: [Character] = []
+                        var iteratorCopy = iterator
+
+                        guard iterator.next() == "{" else {
+                            fatalError("Expected '{' in unicode scalar escape sequence")
+                        }
+
+                        var foundClosingBrace = false
+                        while let c = iterator.next() {
+                            if c == "}" {
+                                foundClosingBrace = true
+                                break
+                            }
+
+                            guard hexadecimalCharacters.contains(c) else {
+                                iterator = iteratorCopy
+                                break
+                            }
+                            iteratorCopy = iterator
+
+                            digits.append(c)
+                            count += 1
+                        }
+
+                        guard foundClosingBrace else {
+                            fatalError("Expected '}' in unicode scalar escape sequence")
+                        }
+
+                        if !(1...8).contains(count) {
+                            fatalError("Invalid unicode character escape sequence (must be 1 to 8 digits)")
+                        }
+
+                        guard
+                            let value = UInt32(digits.map(String.init).joined(separator: ""), radix: 16),
+                            let scalar = Unicode.Scalar(value)
+                        else {
+                            fatalError("Invalid unicode scalar hexadecimal value literal")
+                        }
+
+                        characters.append(Character(scalar))
+                    }
+                    inEscapeSequence = false
+                } else if c == "\\" && escapeSequenceDelimiterPosition == 0 {
+                    escapeSequenceDelimiterPosition += 1
+                } else if !inEscapeSequence && c == "#" && escapeSequenceDelimiterPosition != 0 {
+                    escapeSequenceDelimiterPosition += 1
+                } else {
+                    if escapeSequenceDelimiterPosition != 0 {
+                        characters.append("\\")
+                        for _ in 0..<(escapeSequenceDelimiterPosition - 1) {
+                            characters.append("#")
+                        }
+                        escapeSequenceDelimiterPosition = 0
+                    }
+                    characters.append(c)
+                }
+                if escapeSequenceDelimiterPosition == escapeSequenceDelimiterLength {
+                    inEscapeSequence = true
+                    escapeSequenceDelimiterPosition = 0
+                }
+            }
+            return characters.map(String.init).joined(separator: "")
+        }
+
+        return transformedSegments.joined(separator: "")
+    }
+
+    public var containsInterpolation: Bool {
+        value == nil
+    }
+}
+
+public struct BooleanLiteral: LiteralProtocol {
+    public var _syntax: BooleanLiteralExprSyntax
+
+    public init(_ syntax: BooleanLiteralExprSyntax) {
+        _syntax = syntax
+    }
+
+    public var value: Bool {
+        _syntax.booleanLiteral.tokenKind == .keyword(.true)
+    }    
+}
+
+public struct FloatLiteral: LiteralProtocol {
+    public var _syntax: FloatLiteralExprSyntax
+    public var _negationSyntax: PrefixOperatorExprSyntax?
+
+    public init(_ syntax: FloatLiteralExprSyntax) {
+        _syntax = syntax
+    }
+
+    /// Succeeds if the expression is either a floating point literal or the negation of a floating point literal.
+    /// Assumes that the negation operator hasn't been overloaded.
+    public init?(_ syntax: any ExprSyntaxProtocol) {
+        guard
+            let operatorSyntax = syntax.as(PrefixOperatorExprSyntax.self),
+            operatorSyntax.operatorToken?.tokenKind == .prefixOperator("-"),
+            let literalSyntax = operatorSyntax.postfixExpression.as(FloatLiteralExprSyntax.self)
+        else {
+            // Just treat it as a regular integer literal
+            guard let literal = syntax.as(FloatLiteralExprSyntax.self).map(Self.init) else {
+                return nil
+            }
+            self = literal
+            return
+        }
+        _syntax = literalSyntax
+        _negationSyntax = operatorSyntax
+    }
+
+    public var value: Double {
+        let string = _syntax.floatingDigits.text
+
+        let isHexadecimal: Bool
+        let stringWithoutPrefix: String
+        switch string.prefix(2) {
+            case "0x":
+                isHexadecimal = true
+                stringWithoutPrefix = String(string.dropFirst(2))
+            default:
+                isHexadecimal = false
+                stringWithoutPrefix = string
+        }
+        
+        let exponentSeparator: Character = isHexadecimal ? "p" : "e"
+        let parts = stringWithoutPrefix.lowercased().split(separator: exponentSeparator)
+        guard parts.count <= 2 else {
+            fatalError("Float literal cannot contain more than one exponent separator")
+        }
+
+        let exponentValue: Int
+        if parts.count == 2 {
+            // The exponent part is always decimal
+            let exponentPart = parts[1]
+            let exponentPartWithoutUnderscores = exponentPart.replacingOccurrences(of: "_", with: "")
+            guard
+                exponentPart.first != "_",
+                !exponentPart.starts(with: "-_"),
+                let exponent = Int(exponentPartWithoutUnderscores)
+            else {
+                fatalError("Float literal has invalid exponent part: \(string)")
+            }
+            exponentValue = exponent
+        } else {
+            exponentValue = 0
+        }
+
+        let partsBeforeExponent = parts[0].split(separator: ".")
+        guard partsBeforeExponent.count <= 2 else {
+            fatalError("Float literal cannot contain more than one decimal point: \(string)")
+        }
+
+        // The integer part can contain underscores anywhere except for the first character (which must be a digit).
+        let radix = isHexadecimal ? 16 : 10
+        let integerPart = partsBeforeExponent[0]
+        let integerPartWithoutUnderscores = integerPart.replacingOccurrences(of: "_", with: "")
+        guard
+            integerPart.first != "_",
+            let integerPartValue = Int(integerPartWithoutUnderscores, radix: radix).map(Double.init)
+        else {
+            fatalError("Float literal has invalid integer part: \(string)")
+        }
+
+        let fractionalPartValue: Double
+        if partsBeforeExponent.count == 2 {
+            // The fractional part can contain underscores anywhere except for the first character (which must be a digit).
+            let fractionalPart = partsBeforeExponent[1]
+            let fractionalPartWithoutUnderscores = fractionalPart.replacingOccurrences(of: "_", with: "")
+            guard
+                fractionalPart.first != "_",
+                let fractionalPartDigitsValue = Int(fractionalPartWithoutUnderscores, radix: radix)
+            else {
+                fatalError("Float literal has invalid fractional part: \(string)")
+            }
+
+            fractionalPartValue = Double(fractionalPartDigitsValue) / pow(Double(radix), Double(fractionalPart.count - 1))
+        } else {
+            fractionalPartValue = 0
+        }
+
+        let base: Double = isHexadecimal ? 2 : 10
+        let multiplier = pow(base, Double(exponentValue))
+        let sign: Double = _negationSyntax == nil ? 1 : -1
+        return (integerPartValue + fractionalPartValue) * multiplier * sign
+    }
+}
+
+public struct IntegerLiteral: LiteralProtocol {
+    public var _syntax: IntegerLiteralExprSyntax
+    public var _negationSyntax: PrefixOperatorExprSyntax?
+
+    public init(_ syntax: IntegerLiteralExprSyntax) {
+        _syntax = syntax
+    }
+
+    /// Succeeds if the expression is either an integer literal or the negation of an integer literal.
+    /// Assumes that the negation operator hasn't been overloaded.
+    public init?(_ syntax: any ExprSyntaxProtocol) {
+        // TODO: This is a good example for why people should use the toolkit, do you really want to handle negated integer literals yourself?
+        //       Floating point literals are an even better example, (`-0xFp-2` anyone?)
+        guard
+            let operatorSyntax = syntax.as(PrefixOperatorExprSyntax.self),
+            operatorSyntax.operatorToken?.tokenKind == .prefixOperator("-"),
+            let literalSyntax = operatorSyntax.postfixExpression.as(IntegerLiteralExprSyntax.self)
+        else {
+            // Just treat it as a regular integer literal
+            guard let literal = syntax.as(IntegerLiteralExprSyntax.self).map(Self.init) else {
+                return nil
+            }
+            self = literal
+            return
+        }
+        _syntax = literalSyntax
+        _negationSyntax = operatorSyntax
+    }
+
+    public var value: Int {
+        let string = _syntax.digits.text
+
+        var prefixCount = 2
+        let radix: Int
+        switch string.prefix(2) {
+            case "0b":
+                radix = 2
+            case "0o":
+                radix = 8
+            case "0x":
+                radix = 16
+            default:
+                radix = 10
+                prefixCount = 0
+        }
+
+        // The rest can contain underscores anywhere except for the first character (which must be a digit).
+        let rest = string.dropFirst(prefixCount)
+        let restWithoutUnderscores = rest.replacingOccurrences(of: "_", with: "")
+        guard
+            rest.first != "_",
+            let value = Int(restWithoutUnderscores, radix: radix)
+        else {
+            fatalError("Invalid value for integer literal: \(string)")
+        }
+
+        let sign = _negationSyntax == nil ? 1 : -1
+        return value * sign
+    } 
+}
+
+public struct NilLiteral: LiteralProtocol {
+    public var _syntax: NilLiteralExprSyntax
+
+    public init(_ syntax: NilLiteralExprSyntax) {
+        _syntax = syntax
+    }
+
+    public var value: Void {
+        Void()
+    } 
+}
+
+public struct RegexLiteral: LiteralProtocol {
+    public var _syntax: RegexLiteralExprSyntax
+
+    public init(_ syntax: RegexLiteralExprSyntax) {
+        _syntax = syntax
+    }
+
+    /// On macOS 13.0 and up you can use ``RegexLiteral/regexValue`` to get the parsed regex value.
+    public var value: String {
+        _syntax.regexPattern.text
+    }
+
+    /// Rethrows parsing errors thrown by the ``Regex`` initializer.
+    @available(macOS 13.0, *)
+    public func regexValue() throws -> Regex<AnyRegexOutput> {
+        return try Regex(_syntax.regexPattern.text)
+    } 
+}
+
+public protocol ExpressionProtocol {
+    associatedtype WrappedSyntax: ExprSyntaxProtocol
+    var _syntax: WrappedSyntax { get }
+    init(_ syntax: WrappedSyntax)
+}
+
+public protocol LiteralProtocol: ExpressionProtocol {
+    associatedtype Value
+    var value: Value { get }
+}
+
+extension ExpressionProtocol {
+    public init?(_ syntax: ExprSyntaxProtocol) {
+        guard let syntax = syntax.as(WrappedSyntax.self) else {
+            return nil
+        }
+        self.init(syntax)
     }
 }
 
@@ -898,6 +1256,14 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element
     return (array[0], array[1], array[2], array[3], array[4])
 }
 
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element, Element, Element, Element)? {
+    let array = Array(elements)
+    guard array.count == 6 else {
+        return nil
+    }
+    return (array[0], array[1], array[2], array[3], array[4], array[5])
+}
+
 public func destructure(_ type: NominalType) -> (String, ())? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
@@ -936,6 +1302,12 @@ public func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type
     }
 }
 
+public func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type, Type, Type))? {
+    destructure(type.genericArguments ?? []).map { arguments in
+        (type.name, arguments)
+    }
+}
+
 public func destructure(_ type: FunctionType) -> ((), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
@@ -969,6 +1341,12 @@ public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type), Type
 }
 
 public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type), Type)? {
+    destructure(type.parameters).map { parameters in
+        (parameters, type.returnType)
+    }
+}
+
+public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
@@ -1047,6 +1425,20 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
 }
 
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type)>? {
+    if let type = type.asNominalType {
+        return destructure(type).map { destructured in
+            .nominal(name: destructured.0, genericArguments: destructured.1)
+        }
+    } else if let type = type.asFunctionType {
+        return destructure(type).map { destructured in
+            .function(parameterTypes: destructured.0, returnType: destructured.1)
+        }
+    } else {
+        return nil
+    }
+}
+
+public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type, Type)>? {
     if let type = type.asNominalType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
