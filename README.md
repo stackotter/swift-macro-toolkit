@@ -116,7 +116,7 @@ return literal.value
 
 ```swift
 guard
-    case let .nominal("Result", (successType, failureType))? = destructure(Type(returnType))
+    case let .nominal("Result", (successType, failureType))? = destructure(returnType)
 else {
     throw MacroError("Invalid return type")
 }
