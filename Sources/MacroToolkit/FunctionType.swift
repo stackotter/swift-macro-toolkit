@@ -1,33 +1,23 @@
 import SwiftSyntax
 
 /// Wraps a function type (e.g. `(Int, Double) -> Bool`).
-public struct FunctionType {
+public struct FunctionType: TypeProtocol {
     // TODO: Should give access to attributes such as `@escaping`.
-    public var _syntax: FunctionTypeSyntax
+    public var _baseSyntax: FunctionTypeSyntax
+    public var _attributedSyntax: AttributedTypeSyntax?
 
-    public init?(from other: Type) {
-        guard let type = other.asFunctionType else {
-            return nil
-        }
-        self = type
-    }
-
-    public init(_ syntax: FunctionTypeSyntax) {
-        _syntax = syntax
-    }
-
-    public init?(_ syntax: TypeSyntax) {
-        guard let syntax = syntax.as(FunctionTypeSyntax.self) else {
-            return nil
-        }
-        _syntax = syntax
+    /// Don't supply the `attributedSyntax` parameter, use the `attributedSyntax` initializer instead.
+    /// It only exists because of protocol conformance.
+    public init(_ syntax: FunctionTypeSyntax, attributedSyntax: AttributedTypeSyntax? = nil) {
+        _baseSyntax = syntax
+        _attributedSyntax = attributedSyntax
     }
 
     public var returnType: Type {
-        Type(_syntax.output.returnType)
+        Type(_baseSyntax.output.returnType)
     }
 
     public var parameters: [Type] {
-        _syntax.arguments.map(\.type).map(Type.init)
+        _baseSyntax.arguments.map(\.type).map(Type.init)
     }
 }

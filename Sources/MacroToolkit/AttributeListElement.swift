@@ -46,7 +46,7 @@ extension Sequence where Element == AttributeListElement {
     public func first(called name: String) -> Attribute? {
         // TODO: How should conditional compilation attributes be handled?
         compactMap(\.attribute).first { attribute in
-            attribute.name.asNominalType?.name == name
+            attribute.name.name == name
         }
     }
 }

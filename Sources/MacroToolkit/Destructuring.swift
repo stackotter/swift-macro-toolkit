@@ -57,7 +57,7 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element
     return (array[0], array[1], array[2], array[3], array[4], array[5])
 }
 
-public func destructure(_ type: NominalType) -> (String, ())? {
+public func destructure(_ type: SimpleType) -> (String, ())? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
@@ -65,37 +65,37 @@ public func destructure(_ type: NominalType) -> (String, ())? {
 
 /// Named differently to allow type inference to still work correctly (single element tuples
 /// are weird in Swift).
-public func destructureSingle(_ type: NominalType) -> (String, (Type))? {
+public func destructureSingle(_ type: SimpleType) -> (String, (Type))? {
     destructureSingle(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-public func destructure(_ type: NominalType) -> (String, (Type, Type))? {
+public func destructure(_ type: SimpleType) -> (String, (Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-public func destructure(_ type: NominalType) -> (String, (Type, Type, Type))? {
+public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-public func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type))? {
+public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-public func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type, Type))? {
+public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
-public func destructure(_ type: NominalType) -> (String, (Type, Type, Type, Type, Type, Type))? {
+public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
@@ -146,7 +146,7 @@ public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type,
 }
 
 public func destructure(_ type: Type) -> DestructuredType<()>? {
-    if let type = type.asNominalType {
+    if let type = type.asSimpleType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }
@@ -162,7 +162,7 @@ public func destructure(_ type: Type) -> DestructuredType<()>? {
 /// Named differently to allow type inference to still work correctly (single element tuples
 /// are weird in Swift).
 public func destructureSingle(_ type: Type) -> DestructuredType<(Type)>? {
-    if let type = type.asNominalType {
+    if let type = type.asSimpleType {
         return destructureSingle(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }
@@ -176,7 +176,7 @@ public func destructureSingle(_ type: Type) -> DestructuredType<(Type)>? {
 }
 
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
-    if let type = type.asNominalType {
+    if let type = type.asSimpleType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }
@@ -190,7 +190,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
 }
 
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
-    if let type = type.asNominalType {
+    if let type = type.asSimpleType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }
@@ -204,7 +204,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
 }
 
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type)>? {
-    if let type = type.asNominalType {
+    if let type = type.asSimpleType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }
@@ -218,7 +218,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
 }
 
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type)>? {
-    if let type = type.asNominalType {
+    if let type = type.asSimpleType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }
@@ -232,7 +232,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
 }
 
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type, Type)>? {
-    if let type = type.asNominalType {
+    if let type = type.asSimpleType {
         return destructure(type).map { destructured in
             .nominal(name: destructured.0, genericArguments: destructured.1)
         }

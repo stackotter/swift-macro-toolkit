@@ -1,4 +1,4 @@
-public protocol LiteralProtocol: ExpressionProtocol {
+public protocol LiteralProtocol: ExprProtocol {
     associatedtype Value
     var value: Value { get }
 }
