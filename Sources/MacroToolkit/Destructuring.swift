@@ -7,6 +7,7 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> ()? {
     return ()
 }
 
+/// Destructures the given `elements` into a single element if there is exactly one element.
 /// Named differently to allow type inference to still work correctly (single element tuples
 /// are weird in Swift).
 public func destructureSingle<Element>(_ elements: some Sequence<Element>) -> (Element)? {
@@ -17,6 +18,7 @@ public func destructureSingle<Element>(_ elements: some Sequence<Element>) -> (E
     return (array[0])
 }
 
+/// Destructures the given `elements` into a tuple of 2 elements if there are exactly 2 elements.
 public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element)? {
     let array = Array(elements)
     guard array.count == 2 else {
@@ -25,7 +27,9 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element
     return (array[0], array[1])
 }
 
-public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element)? {
+/// Destructures the given `elements` into a tuple of 3 elements if there are exactly 3 elements.
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element)?
+{
     let array = Array(elements)
     guard array.count == 3 else {
         return nil
@@ -33,7 +37,10 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element
     return (array[0], array[1], array[2])
 }
 
-public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element, Element)? {
+/// Destructures the given `elements` into a tuple of 4 elements if there are exactly 4 elements.
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (
+    Element, Element, Element, Element
+)? {
     let array = Array(elements)
     guard array.count == 4 else {
         return nil
@@ -41,7 +48,10 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element
     return (array[0], array[1], array[2], array[3])
 }
 
-public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element, Element, Element)? {
+/// Destructures the given `elements` into a tuple of 5 elements if there are exactly 5 elements.
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (
+    Element, Element, Element, Element, Element
+)? {
     let array = Array(elements)
     guard array.count == 5 else {
         return nil
@@ -49,7 +59,10 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element
     return (array[0], array[1], array[2], array[3], array[4])
 }
 
-public func destructure<Element>(_ elements: some Sequence<Element>) -> (Element, Element, Element, Element, Element, Element)? {
+/// Destructures the given `elements` into a tuple of 6 elements if there are exactly 6 elements.
+public func destructure<Element>(_ elements: some Sequence<Element>) -> (
+    Element, Element, Element, Element, Element, Element
+)? {
     let array = Array(elements)
     guard array.count == 6 else {
         return nil
@@ -148,7 +161,7 @@ public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type,
 public func destructure(_ type: Type) -> DestructuredType<()>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
-            .nominal(name: destructured.0, genericArguments: destructured.1)
+            .simple(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
         return destructure(type).map { destructured in
@@ -164,7 +177,7 @@ public func destructure(_ type: Type) -> DestructuredType<()>? {
 public func destructureSingle(_ type: Type) -> DestructuredType<(Type)>? {
     if let type = type.asSimpleType {
         return destructureSingle(type).map { destructured in
-            .nominal(name: destructured.0, genericArguments: destructured.1)
+            .simple(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
         return destructureSingle(type).map { destructured in
@@ -178,7 +191,7 @@ public func destructureSingle(_ type: Type) -> DestructuredType<(Type)>? {
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
-            .nominal(name: destructured.0, genericArguments: destructured.1)
+            .simple(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
         return destructure(type).map { destructured in
@@ -192,7 +205,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
-            .nominal(name: destructured.0, genericArguments: destructured.1)
+            .simple(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
         return destructure(type).map { destructured in
@@ -206,7 +219,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
-            .nominal(name: destructured.0, genericArguments: destructured.1)
+            .simple(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
         return destructure(type).map { destructured in
@@ -220,7 +233,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
-            .nominal(name: destructured.0, genericArguments: destructured.1)
+            .simple(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
         return destructure(type).map { destructured in
@@ -234,7 +247,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
-            .nominal(name: destructured.0, genericArguments: destructured.1)
+            .simple(name: destructured.0, genericArguments: destructured.1)
         }
     } else if let type = type.asFunctionType {
         return destructure(type).map { destructured in
@@ -245,8 +258,10 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
     }
 }
 
-/// A destructured type (e.g. `Result<Success, Failure>` => `.nominal(name: "Result", genericArguments: ("Success", "Failure"))`).
+/// A destructured type (e.g. `Result<Success, Failure>` becomes `.simple(name: "Result", genericArguments: ("Success", "Failure"))`).
 public enum DestructuredType<TypeList> {
-    case nominal(name: String, genericArguments: TypeList)
+    /// A simple type (often referred to as a nominal type) such as `Int` or `Array<String>`.
+    case simple(name: String, genericArguments: TypeList)
+    /// A function type such as `(Int) -> Void`.
     case function(parameterTypes: TypeList, returnType: Type)
 }

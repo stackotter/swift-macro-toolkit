@@ -82,7 +82,7 @@ public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
         return type._attributedSyntax
     }
 
-    /// Wrap a ``TypeSyntax`` (e.g. `Int?` or `MyStruct<[String]>!`).
+    /// Wrap a `TypeSyntax` (e.g. `Int?` or `MyStruct<[String]>!`).
     public init(_ syntax: TypeSyntax) {
         self.init(syntax, attributedSyntax: nil)
     }

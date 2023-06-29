@@ -1,6 +1,6 @@
+import MacroToolkit
 import SwiftSyntax
 import SwiftSyntaxMacros
-import MacroToolkit
 
 // Modified from: https://github.com/DougGregor/swift-macro-examples/blob/f61ac7cdca8dc3557e53f86e7e03df1353908d3e/MacroExamplesPlugin/AddAsyncMacro.swift
 public struct AddAsyncMacro: PeerMacro {
@@ -31,22 +31,26 @@ public struct AddAsyncMacro: PeerMacro {
         guard
             let completionHandlerType = function.parameters.last?.type.asFunctionType
         else {
-            throw MacroError("@AddAsync requires a function that has a completion handler as last parameter")
+            throw MacroError(
+                "@AddAsync requires a function that has a completion handler as last parameter")
         }
 
         // Completion handler needs to return Void
         guard completionHandlerType.returnType.isVoid else {
-            throw MacroError("@AddAsync requires a function that has a completion handler that returns Void")
+            throw MacroError(
+                "@AddAsync requires a function that has a completion handler that returns Void")
         }
 
         guard let returnType = completionHandlerType.parameters.first else {
-            throw MacroError("@AddAsync requires a function that has a completion handler that has one parameter")
+            throw MacroError(
+                "@AddAsync requires a function that has a completion handler that has one parameter"
+            )
         }
 
         // Destructure return type
         let successReturnType: Type
         let isResultReturn: Bool
-        if case let .nominal("Result", (successType, _)) = destructure(returnType) {
+        if case let .simple("Result", (successType, _)) = destructure(returnType) {
             isResultReturn = true
             successReturnType = successType
         } else {

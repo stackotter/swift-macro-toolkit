@@ -1,8 +1,11 @@
-import SwiftSyntax
 import Foundation
+import SwiftSyntax
 
+/// Wraps a floating point literal (e.g. `5.0` or ` -0xF.0f_ep-2_`).
 public struct FloatLiteral: LiteralProtocol {
     public var _syntax: FloatLiteralExprSyntax
+
+    /// The syntax node referring to the entire literal, including the negation syntax.
     public var _negationSyntax: PrefixOperatorExprSyntax?
 
     public init(_ syntax: FloatLiteralExprSyntax) {
@@ -41,7 +44,7 @@ public struct FloatLiteral: LiteralProtocol {
                 isHexadecimal = false
                 stringWithoutPrefix = string
         }
-        
+
         let exponentSeparator: Character = isHexadecimal ? "p" : "e"
         let parts = stringWithoutPrefix.lowercased().split(separator: exponentSeparator)
         guard parts.count <= 2 else {
@@ -52,7 +55,8 @@ public struct FloatLiteral: LiteralProtocol {
         if parts.count == 2 {
             // The exponent part is always decimal
             let exponentPart = parts[1]
-            let exponentPartWithoutUnderscores = exponentPart.replacingOccurrences(of: "_", with: "")
+            let exponentPartWithoutUnderscores = exponentPart.replacingOccurrences(
+                of: "_", with: "")
             guard
                 exponentPart.first != "_",
                 !exponentPart.starts(with: "-_"),
@@ -85,7 +89,8 @@ public struct FloatLiteral: LiteralProtocol {
         if partsBeforeExponent.count == 2 {
             // The fractional part can contain underscores anywhere except for the first character (which must be a digit).
             let fractionalPart = partsBeforeExponent[1]
-            let fractionalPartWithoutUnderscores = fractionalPart.replacingOccurrences(of: "_", with: "")
+            let fractionalPartWithoutUnderscores = fractionalPart.replacingOccurrences(
+                of: "_", with: "")
             guard
                 fractionalPart.first != "_",
                 let fractionalPartDigitsValue = Int(fractionalPartWithoutUnderscores, radix: radix)
@@ -93,7 +98,9 @@ public struct FloatLiteral: LiteralProtocol {
                 fatalError("Float literal has invalid fractional part: \(string)")
             }
 
-            fractionalPartValue = Double(fractionalPartDigitsValue) / pow(Double(radix), Double(fractionalPart.count - 1))
+            fractionalPartValue =
+                Double(fractionalPartDigitsValue)
+                / pow(Double(radix), Double(fractionalPart.count - 1))
         } else {
             fractionalPartValue = 0
         }

@@ -1,7 +1,10 @@
 import SwiftSyntax
 
+/// Wraps an integer literal (e.g. `1` or `-0xfe`).
 public struct IntegerLiteral: LiteralProtocol {
     public var _syntax: IntegerLiteralExprSyntax
+
+    /// The syntax node referring to the entire literal, including the negation syntax.
     public var _negationSyntax: PrefixOperatorExprSyntax?
 
     public init(_ syntax: IntegerLiteralExprSyntax) {
@@ -58,5 +61,5 @@ public struct IntegerLiteral: LiteralProtocol {
 
         let sign = _negationSyntax == nil ? 1 : -1
         return value * sign
-    } 
+    }
 }

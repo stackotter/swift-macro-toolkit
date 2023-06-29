@@ -115,9 +115,7 @@ return literal.value
 #### With Macro Toolkit
 
 ```swift
-guard
-    case let .nominal("Result", (successType, failureType))? = destructure(returnType)
-else {
+guard case let .simple("Result", (successType, failureType))? = destructure(returnType) else {
     throw MacroError("Invalid return type")
 }
 ```
@@ -126,9 +124,9 @@ else {
 
 ```swift
 guard
-    let nominalReturnType = returnType.as(SimpleTypeIdentifierSyntax.self),
-    nominalReturnType.name.description == "Result",
-    let genericArguments = (nominalReturnType.genericArgumentClause?.arguments).map(Array.init),
+    let simpleReturnType = returnType.as(SimpleTypeIdentifierSyntax.self),
+    simpleReturnType.name.description == "Result",
+    let genericArguments = (simpleReturnType.genericArgumentClause?.arguments).map(Array.init),
     genericArguments.count == 2
 else {
     throw MacroError("Invalid return type")
@@ -165,8 +163,8 @@ func returnsVoid(_ function: FunctionDeclSyntax) -> Bool {
         }
 
         if let element = tuple.elements.first, tuple.elements.count == 1 {
-            let isLabeled = element.name == nil && element.secondName == nil
-            return isLabeled && isVoid(TypeSyntax(element.type))
+            let isUnlabeled = element.name == nil && element.secondName == nil
+            return isUnlabeled && isVoid(TypeSyntax(element.type))
         }
         return false
     }

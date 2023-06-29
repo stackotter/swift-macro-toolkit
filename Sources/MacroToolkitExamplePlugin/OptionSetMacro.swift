@@ -87,8 +87,7 @@ public struct OptionSetMacro {
         }
 
         // Retrieve the raw type from the attribute
-        // TODO: Improve destructuring on single-element arrays
-        guard case let .nominal(_, (rawType)) = destructureSingle(attribute.name) else {
+        guard case let .simple(_, (rawType)) = destructureSingle(attribute.name) else {
             context.diagnose(
                 OptionSetMacroDiagnostic.requiresOptionsEnumRawType.diagnose(at: attribute._syntax))
             return nil

@@ -6,6 +6,7 @@ public enum AttributeListElement {
     case attribute(Attribute)
     case conditionalCompilationBlock(ConditionalCompilationBlock)
 
+    /// The underlying attribute (if any).
     public var attribute: Attribute? {
         switch self {
             case .attribute(let attribute):
@@ -15,6 +16,8 @@ public enum AttributeListElement {
         }
     }
 
+    /// The underlying conditional compilation block (e.g.
+    /// `#if ... \n @propertyWrapper \n #endif`).
     public var conditionalCompilationBlock: ConditionalCompilationBlock? {
         switch self {
             case .conditionalCompilationBlock(let conditionalCompilationBlock):
@@ -36,13 +39,16 @@ extension Sequence where Element == AttributeListElement {
                 case .attribute(let attribute):
                     element = .attribute(attribute._syntax.with(\.trailingTrivia, [.spaces(1)]))
                 case .conditionalCompilationBlock(let conditionalCompilationBlock):
-                    element = .ifConfigDecl(conditionalCompilationBlock._syntax.with(\.trailingTrivia, [.spaces(1)]))
+                    element = .ifConfigDecl(
+                        conditionalCompilationBlock._syntax.with(\.trailingTrivia, [.spaces(1)]))
             }
             list = list.appending(element)
         }
         return list
     }
 
+    /// Gets the first attribute with the given `name`. The name doesn't include
+    /// any generic parameters (see ``Attribute/name``).
     public func first(called name: String) -> Attribute? {
         // TODO: How should conditional compilation attributes be handled?
         compactMap(\.attribute).first { attribute in
