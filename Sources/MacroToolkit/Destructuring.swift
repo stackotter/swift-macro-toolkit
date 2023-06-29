@@ -1,4 +1,5 @@
 // TODO: Figure out a destructuring implementation that uses variadic generics (tricky without same type requirements)
+/// Destructures the given `elements` into a tuple of 0 elements if there are exactly 0 elements.
 public func destructure<Element>(_ elements: some Sequence<Element>) -> ()? {
     let array = Array(elements)
     guard array.count == 0 else {
@@ -8,6 +9,7 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> ()? {
 }
 
 /// Destructures the given `elements` into a single element if there is exactly one element.
+///
 /// Named differently to allow type inference to still work correctly (single element tuples
 /// are weird in Swift).
 public func destructureSingle<Element>(_ elements: some Sequence<Element>) -> (Element)? {
@@ -70,12 +72,15 @@ public func destructure<Element>(_ elements: some Sequence<Element>) -> (
     return (array[0], array[1], array[2], array[3], array[4], array[5])
 }
 
+/// Destructures the given `type` into a name and a tuple of 0 generic type parameters if there are exactly 0 generic type parameters.
 public func destructure(_ type: SimpleType) -> (String, ())? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
+/// Destructures the given `type` into a name and 1 generic type parameter if there is exactly 1 generic type parameter.
+///
 /// Named differently to allow type inference to still work correctly (single element tuples
 /// are weird in Swift).
 public func destructureSingle(_ type: SimpleType) -> (String, (Type))? {
@@ -84,42 +89,50 @@ public func destructureSingle(_ type: SimpleType) -> (String, (Type))? {
     }
 }
 
+/// Destructures the given `type` into a name and a tuple of 2 generic type parameters if there are exactly 2 generic type parameters.
 public func destructure(_ type: SimpleType) -> (String, (Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
+/// Destructures the given `type` into a name and a tuple of 3 generic type parameters if there are exactly 3 generic type parameters.
 public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
+/// Destructures the given `type` into a name and a tuple of 4 generic type parameters if there are exactly 4 generic type parameters.
 public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
+/// Destructures the given `type` into a name and a tuple of 5 generic type parameters if there are exactly 5 generic type parameters.
 public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
+/// Destructures the given `type` into a name and a tuple of 6 generic type parameters if there are exactly 6 generic type parameters.
 public func destructure(_ type: SimpleType) -> (String, (Type, Type, Type, Type, Type, Type))? {
     destructure(type.genericArguments ?? []).map { arguments in
         (type.name, arguments)
     }
 }
 
+/// Destructures the given `type` into a tuple of 0 parameter types and a return type if there are exactly 0 parameters.
 public func destructure(_ type: FunctionType) -> ((), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
+/// Destructures the given `type` into a parameter type and a return type if there is exactly 1 parameter.
+///
 /// Named differently to allow type inference to still work correctly (single element tuples
 /// are weird in Swift).
 public func destructureSingle(_ type: FunctionType) -> ((Type), Type)? {
@@ -128,36 +141,42 @@ public func destructureSingle(_ type: FunctionType) -> ((Type), Type)? {
     }
 }
 
+/// Destructures the given `type` into a tuple of 2 parameter types and a return type if there are exactly 2 parameters.
 public func destructure(_ type: FunctionType) -> ((Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
+/// Destructures the given `type` into a tuple of 3 parameter types and a return type if there are exactly 3 parameters.
 public func destructure(_ type: FunctionType) -> ((Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
+/// Destructures the given `type` into a tuple of 4 parameter types and a return type if there are exactly 4 parameters.
 public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
+/// Destructures the given `type` into a tuple of 5 parameter types and a return type if there are exactly 5 parameters.
 public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
+/// Destructures the given `type` into a tuple of 6 parameter types and a return type if there are exactly 6 parameters.
 public func destructure(_ type: FunctionType) -> ((Type, Type, Type, Type, Type, Type), Type)? {
     destructure(type.parameters).map { parameters in
         (parameters, type.returnType)
     }
 }
 
+/// Destructures the given `type` into a ``DestructuredType`` for easy pattern matching.
 public func destructure(_ type: Type) -> DestructuredType<()>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
@@ -172,6 +191,8 @@ public func destructure(_ type: Type) -> DestructuredType<()>? {
     }
 }
 
+/// Destructures the given `type` into a ``DestructuredType`` for easy pattern matching.
+///
 /// Named differently to allow type inference to still work correctly (single element tuples
 /// are weird in Swift).
 public func destructureSingle(_ type: Type) -> DestructuredType<(Type)>? {
@@ -188,6 +209,7 @@ public func destructureSingle(_ type: Type) -> DestructuredType<(Type)>? {
     }
 }
 
+/// Destructures the given `type` into a ``DestructuredType`` for easy pattern matching.
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
@@ -202,6 +224,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type)>? {
     }
 }
 
+/// Destructures the given `type` into a ``DestructuredType`` for easy pattern matching.
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
@@ -216,6 +239,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type)>? {
     }
 }
 
+/// Destructures the given `type` into a ``DestructuredType`` for easy pattern matching.
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
@@ -230,6 +254,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
     }
 }
 
+/// Destructures the given `type` into a ``DestructuredType`` for easy pattern matching.
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in
@@ -244,6 +269,7 @@ public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Typ
     }
 }
 
+/// Destructures the given `type` into a ``DestructuredType`` for easy pattern matching.
 public func destructure(_ type: Type) -> DestructuredType<(Type, Type, Type, Type, Type, Type)>? {
     if let type = type.asSimpleType {
         return destructure(type).map { destructured in

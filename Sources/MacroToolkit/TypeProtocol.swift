@@ -1,5 +1,6 @@
 import SwiftSyntax
 
+/// A protocol for type syntax wrappers to conform to. Allows simple conversion between type wrappers.
 public protocol TypeProtocol {
     /// The underlying type syntax being wrapped.
     associatedtype WrappedSyntax: TypeSyntaxProtocol
