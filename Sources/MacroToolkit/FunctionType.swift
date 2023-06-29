@@ -13,10 +13,12 @@ public struct FunctionType: TypeProtocol {
         _attributedSyntax = attributedSyntax
     }
 
+    /// The return type that the function type describes.
     public var returnType: Type {
         Type(_baseSyntax.output.returnType)
     }
 
+    /// The types of the parameters the function type describes.
     public var parameters: [Type] {
         _baseSyntax.arguments.map(\.type).map(Type.init)
     }
