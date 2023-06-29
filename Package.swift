@@ -23,6 +23,7 @@ let package = Package(
         .macro(
             name: "MacroToolkitExamplePlugin",
             dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 "MacroToolkit",
@@ -35,6 +36,7 @@ let package = Package(
         .target(
             name: "MacroToolkit",
             dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             ]
@@ -44,6 +46,9 @@ let package = Package(
             name: "MacroToolkitTests",
             dependencies: [
                 "MacroToolkitExample",
+                "MacroToolkit",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
