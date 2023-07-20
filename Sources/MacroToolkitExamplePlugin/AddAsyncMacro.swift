@@ -76,9 +76,10 @@ public struct AddAsyncMacro: PeerMacro {
             }
             """
 
-        let continuationExpr = isResultReturn
-        ? "try await withCheckedThrowingContinuation { continuation in"
-        : "await withCheckedContinuation { continuation in"
+        let continuationExpr =
+            isResultReturn
+            ? "try await withCheckedThrowingContinuation { continuation in"
+            : "await withCheckedContinuation { continuation in"
 
         let newBody: ExprSyntax =
             """

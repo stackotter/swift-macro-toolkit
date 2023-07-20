@@ -23,20 +23,20 @@ public struct MacroAttribute {
     /// Gets the argument with the given label.
     public func argument(labeled label: String) -> Expr? {
         (_argumentListSyntax?.first { element in
-            return element.label?.text == label
+            element.label?.text == label
         }?.expression).map(Expr.init)
     }
 
-    // TODO: Include labels alongside each argument, and add way to conditionally get arguments without labels if no labels are present.
+    // TODO: Add way to conditionally get arguments without labels if no labels are present.
     //   This is required because most of the time when matching against the list of arguments, macro authors will want to ensure there
     //   are no random extraenous labels.
     /// Gets the list of all of the attribute's arguments.
-    public var arguments: [Expr] {
+    public var arguments: [(label: String?, expr: Expr)] {
         guard let argumentList = _argumentListSyntax else {
             return []
         }
         return Array(argumentList).map { argument in
-            Expr(argument.expression)
+            (label: argument.label?.text, expr: Expr(argument.expression))
         }
     }
 

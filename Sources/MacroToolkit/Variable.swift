@@ -44,6 +44,19 @@ public struct Variable {
         }
     }
 
+    /// Returns the attribute with the given name if the declaration has such an attribute.
+    public func attribute(named name: String) -> Attribute? {
+        for element in attributes {
+            guard case let .attribute(attribute) = element else {
+                continue
+            }
+            if attribute.name.name == name {
+                return attribute
+            }
+        }
+        return nil
+    }
+
     /// Determines whether the variable has the syntax of a stored property.
     ///
     /// This syntactic check cannot account for semantic adjustments due to,

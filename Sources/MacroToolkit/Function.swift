@@ -45,7 +45,8 @@ public struct Function {
                 case .attribute(let attributeSyntax):
                     return .attribute(Attribute(attributeSyntax))
                 case .ifConfigDecl(let ifConfigDeclSyntax):
-                    return .conditionalCompilationBlock(ConditionalCompilationBlock(ifConfigDeclSyntax))
+                    return .conditionalCompilationBlock(
+                        ConditionalCompilationBlock(ifConfigDeclSyntax))
             }
         }
     }

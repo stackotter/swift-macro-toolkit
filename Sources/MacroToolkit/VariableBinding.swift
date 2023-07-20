@@ -1,3 +1,4 @@
+import Foundation
 import SwiftSyntax
 
 /// A variable binding (e.g. the `a: Int = 3` part of `var a: Int = 3`)
@@ -36,7 +37,8 @@ public struct VariableBinding {
     ///
     /// For example, the binding `(a, b) = (1, 2)` doesn't have an `identifier`.
     public var identifier: String? {
-        _syntax.pattern.as(IdentifierPatternSyntax.self)?.identifier.text
+        let identifier = _syntax.pattern.as(IdentifierPatternSyntax.self)?.identifier.text
+        return identifier?.trimmingCharacters(in: CharacterSet(arrayLiteral: "`"))
     }
 
     /// The type annotation supplied for the binding if any (e.g. the `Int` in `a: Int`).

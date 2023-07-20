@@ -48,7 +48,7 @@ attribute lists, etc.). Lets use destructuring to parse an argument list.
 ```swift
 // We're expecting exactly two arguments; a name and an age
 guard
-    let (nameExpr, ageExpr) = attribute.arguments,
+    let ((nil, nameExpr), (nil, ageExpr)) = destructure(attribute.arguments),
     let name = nameExpr.asStringLiteral?.value,
     let age = ageExpr.asIntegerLiteral?.value
 else {

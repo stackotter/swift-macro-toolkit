@@ -19,7 +19,7 @@ public struct CustomCodableMacro: MemberMacro {
             if let customKeyMacro = variable.attributes.first(called: "CodableKey") {
                 guard
                     let attribute = customKeyMacro.asMacroAttribute,
-                    let customKeyValue = destructureSingle(attribute.arguments)
+                    let customKeyValue = destructureSingle(attribute.arguments.map(\.expr))
                 else {
                     return nil
                 }
