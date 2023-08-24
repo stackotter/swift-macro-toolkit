@@ -42,7 +42,7 @@ extension Sequence where Element == AttributeListElement {
                     element = .ifConfigDecl(
                         conditionalCompilationBlock._syntax.with(\.trailingTrivia, [.spaces(1)]))
             }
-            list = list.appending(element)
+            list += [element]
         }
         return list
     }

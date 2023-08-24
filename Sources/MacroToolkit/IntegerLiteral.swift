@@ -18,8 +18,8 @@ public struct IntegerLiteral: LiteralProtocol {
         //       Floating point literals are an even better example, (`-0xFp-2` anyone?)
         guard
             let operatorSyntax = syntax.as(PrefixOperatorExprSyntax.self),
-            operatorSyntax.operatorToken?.tokenKind == .prefixOperator("-"),
-            let literalSyntax = operatorSyntax.postfixExpression.as(IntegerLiteralExprSyntax.self)
+            operatorSyntax.operator.tokenKind == .prefixOperator("-"),
+            let literalSyntax = operatorSyntax.expression.as(IntegerLiteralExprSyntax.self)
         else {
             // Just treat it as a regular integer literal
             guard let literal = syntax.as(IntegerLiteralExprSyntax.self).map(Self.init) else {
@@ -33,7 +33,7 @@ public struct IntegerLiteral: LiteralProtocol {
     }
 
     public var value: Int {
-        let string = _syntax.digits.text
+        let string = _syntax.literal.text
 
         var prefixCount = 2
         let radix: Int

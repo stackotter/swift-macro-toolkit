@@ -21,12 +21,12 @@ public struct VariableBinding {
     /// }
     /// ```
     public var accessors: [AccessorDeclSyntax] {
-        switch _syntax.accessor {
+        switch _syntax.accessorBlock?.accessors {
             case .accessors(let block):
-                return Array(block.accessors)
+                return Array(block)
             case .getter(let getter):
                 // TODO: Avoid synthesising syntax here (wouldn't work with diagnostics)
-                return [AccessorDeclSyntax(accessorKind: .keyword(.get), body: getter)]
+                return [AccessorDeclSyntax(accessorSpecifier: .keyword(.get)) { getter }]
             case .none:
                 return []
         }

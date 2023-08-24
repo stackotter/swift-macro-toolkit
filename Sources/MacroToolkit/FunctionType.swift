@@ -15,11 +15,11 @@ public struct FunctionType: TypeProtocol {
 
     /// The return type that the function type describes.
     public var returnType: Type {
-        Type(_baseSyntax.output.returnType)
+        Type(_baseSyntax.returnClause.type)
     }
 
     /// The types of the parameters the function type describes.
     public var parameters: [Type] {
-        _baseSyntax.arguments.map(\.type).map(Type.init)
+        _baseSyntax.parameters.map(\.type).map(Type.init)
     }
 }

@@ -32,7 +32,7 @@ public struct Variable {
 
     /// The attributes attached to the variable declaration.
     public var attributes: [AttributeListElement] {
-        _syntax.attributes.map(Array.init)?.map { attribute in
+        _syntax.attributes.map { attribute in
             switch attribute {
                 case .attribute(let attributeSyntax):
                     return .attribute(Attribute(attributeSyntax))
@@ -41,7 +41,7 @@ public struct Variable {
                         ConditionalCompilationBlock(ifConfigDeclSyntax)
                     )
             }
-        } ?? []
+        }
     }
 
     /// Determines whether the variable has the syntax of a stored property.
@@ -54,7 +54,7 @@ public struct Variable {
         }
 
         for accessor in binding.accessors {
-            switch accessor.accessorKind.tokenKind {
+            switch accessor.accessorSpecifier.tokenKind {
                 case .keyword(.willSet), .keyword(.didSet):
                     break
                 default:

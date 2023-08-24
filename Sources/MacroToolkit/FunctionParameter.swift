@@ -61,7 +61,7 @@ extension Sequence where Element == FunctionParameter {
         for (index, parameter) in parameters.enumerated() {
             let isLast = index == parameters.count - 1
             let syntax = parameter._syntax.with(\.trailingComma, isLast ? nil : TokenSyntax.commaToken())
-            list = list.appending(syntax)
+            list += [syntax]
         }
         return list
     }

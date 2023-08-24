@@ -33,7 +33,7 @@ public struct StringLiteral: LiteralProtocol {
 
         // TODO: Modularise this code a bit to clean it up
         // The length of the `\###...` sequence that starts an escape sequence (zero hashes if not a raw string)
-        let escapeSequenceDelimiterLength = (_syntax.openDelimiter?.text.count ?? 0) + 1
+        let escapeSequenceDelimiterLength = (_syntax.openingPounds?.text.count ?? 0) + 1
         // Evaluate backslash escape sequences within each segment before joining them together
         let transformedSegments = segments.map { segment in
             var characters: [Character] = []

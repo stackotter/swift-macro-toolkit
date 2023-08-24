@@ -26,7 +26,7 @@ public struct Struct {
 
     /// Types that the struct conforms to.
     public var inheritedTypes: [Type] {
-        _syntax.inheritanceClause?.inheritedTypeCollection.map(\.typeName).map(Type.init) ?? []
+        _syntax.inheritanceClause?.inheritedTypes.map(\.type).map(Type.init) ?? []
     }
 
     /// Whether the `struct` was declared with the `public` access level modifier.

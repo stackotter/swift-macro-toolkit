@@ -2,11 +2,11 @@ import SwiftSyntax
 
 /// Wraps a simple type (e.g. `Result<Success, Failure>`).
 public struct SimpleType: TypeProtocol {
-    public var _baseSyntax: SimpleTypeIdentifierSyntax
+    public var _baseSyntax: IdentifierTypeSyntax
     public var _attributedSyntax: AttributedTypeSyntax?
 
     public init(
-        _ syntax: SimpleTypeIdentifierSyntax,
+        _ syntax: IdentifierTypeSyntax,
         attributedSyntax: AttributedTypeSyntax? = nil
     ) {
         _baseSyntax = syntax
@@ -22,7 +22,7 @@ public struct SimpleType: TypeProtocol {
     /// `Dictionary<Int, String>` it would be `["Int", "String"]`).
     public var genericArguments: [Type]? {
         _baseSyntax.genericArgumentClause.map { clause in
-            clause.arguments.map(\.argumentType).map(Type.init)
+            clause.arguments.map(\.argument).map(Type.init)
         }
     }
 }

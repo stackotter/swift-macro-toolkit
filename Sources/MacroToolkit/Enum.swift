@@ -16,7 +16,7 @@ public struct Enum {
     }
 
     public var identifier: String {
-        _syntax.identifier.withoutTrivia().text
+        _syntax.name.withoutTrivia().text
     }
 
     public var cases: [EnumCase] {
