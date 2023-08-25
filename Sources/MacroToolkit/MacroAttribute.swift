@@ -7,8 +7,8 @@ public struct MacroAttribute {
     public var _syntax: AttributeSyntax
 
     /// The syntax node representing the attribute's arguments (if any).
-    public var _argumentListSyntax: TupleExprElementListSyntax? {
-        if case let .argumentList(arguments) = _syntax.argument {
+    public var _argumentListSyntax: LabeledExprListSyntax? {
+        if case let .argumentList(arguments) = _syntax.arguments {
             return arguments
         } else {
             return nil

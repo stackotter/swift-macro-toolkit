@@ -97,16 +97,22 @@ public struct OptionSetMacro {
     }
 }
 
-extension OptionSetMacro: ConformanceMacro {
+extension OptionSetMacro: ExtensionMacro {
     public static func expansion(
-        of attribute: AttributeSyntax,
-        providingConformancesOf decl: some DeclGroupSyntax,
-        in context: some MacroExpansionContext
-    ) throws -> [(TypeSyntax, GenericWhereClauseSyntax?)] {
+        of node: SwiftSyntax.AttributeSyntax,
+        attachedTo declaration: some SwiftSyntax.DeclGroupSyntax,
+        providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol,
+        conformingTo protocols: [SwiftSyntax.TypeSyntax],
+        in context: some SwiftSyntaxMacros.MacroExpansionContext
+    ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
         // Decode the expansion arguments. If there is an explicit conformance to
         // OptionSet already, don't add one.
         guard
-            let (structDecl, _, _) = decodeExpansion(of: attribute, attachedTo: decl, in: context),
+            let (structDecl, _, _) = decodeExpansion(
+                of: node, 
+                attachedTo: declaration,
+                in: context
+            ),
             !structDecl.inheritedTypes.contains(where: { type in
                 type.description == "OptionSet"
             })
@@ -114,7 +120,21 @@ extension OptionSetMacro: ConformanceMacro {
             return []
         }
 
-        return [("OptionSet", nil)]
+        // Since it creates an extension there is no need to add
+        // types already inherited by struct declaration
+        return [
+            ExtensionDeclSyntax(
+                extendedType: type,
+                inheritanceClause: InheritanceClauseSyntax {
+                    InheritedTypeSyntax(
+                        type: IdentifierTypeSyntax(
+                            name: "OptionSet"
+                        )
+                    )
+                },
+                memberBlockBuilder: {}
+            )
+        ]
     }
 }
 

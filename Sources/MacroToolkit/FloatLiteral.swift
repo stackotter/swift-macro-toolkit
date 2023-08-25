@@ -17,8 +17,8 @@ public struct FloatLiteral: LiteralProtocol {
     public init?(_ syntax: any ExprSyntaxProtocol) {
         guard
             let operatorSyntax = syntax.as(PrefixOperatorExprSyntax.self),
-            operatorSyntax.operatorToken?.tokenKind == .prefixOperator("-"),
-            let literalSyntax = operatorSyntax.postfixExpression.as(FloatLiteralExprSyntax.self)
+            operatorSyntax.operator.tokenKind == .prefixOperator("-"),
+            let literalSyntax = operatorSyntax.expression.as(FloatLiteralExprSyntax.self)
         else {
             // Just treat it as a regular integer literal
             guard let literal = syntax.as(FloatLiteralExprSyntax.self).map(Self.init) else {
@@ -32,7 +32,7 @@ public struct FloatLiteral: LiteralProtocol {
     }
 
     public var value: Double {
-        let string = _syntax.floatingDigits.text
+        let string = _syntax.literal.text
 
         let isHexadecimal: Bool
         let stringWithoutPrefix: String

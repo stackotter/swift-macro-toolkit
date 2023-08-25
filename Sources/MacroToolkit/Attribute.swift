@@ -13,7 +13,7 @@ public struct Attribute {
     /// Creates a new attribute with the given name.
     public init(named name: String) {
         _syntax = AttributeSyntax(
-            attributeName: SimpleTypeIdentifierSyntax(
+            attributeName: IdentifierTypeSyntax(
                 name: .identifier("DictionaryStorage")
             )
         )

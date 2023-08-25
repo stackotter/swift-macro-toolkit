@@ -10,6 +10,6 @@ public struct BooleanLiteral: LiteralProtocol {
     }
 
     public var value: Bool {
-        _syntax.booleanLiteral.tokenKind == .keyword(.true)
+        _syntax.literal.tokenKind == .keyword(.true)
     }
 }

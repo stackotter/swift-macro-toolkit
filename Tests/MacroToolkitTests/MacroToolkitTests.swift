@@ -99,6 +99,7 @@ final class MacroToolkitTests: XCTestCase {
 
             enum Colours {
                 case red, gray(darkness: Int)
+
                 var isRed: Bool {
                     if case .red = self {
                         return true
@@ -106,6 +107,7 @@ final class MacroToolkitTests: XCTestCase {
 
                     return false
                 }
+
                 var isGray: Bool {
                     if case .gray = self {
                         return true
@@ -117,6 +119,7 @@ final class MacroToolkitTests: XCTestCase {
             enum Colours: Int {
                 case red = 1, green = 2
                 case blue
+
                 var isRed: Bool {
                     if case .red = self {
                         return true
@@ -124,6 +127,7 @@ final class MacroToolkitTests: XCTestCase {
 
                     return false
                 }
+
                 var isGreen: Bool {
                     if case .green = self {
                         return true
@@ -131,6 +135,7 @@ final class MacroToolkitTests: XCTestCase {
 
                     return false
                 }
+
                 var isBlue: Bool {
                     if case .blue = self {
                         return true
@@ -196,22 +201,33 @@ final class MacroToolkitTests: XCTestCase {
 
                 static let express: ShippingOptions = [.nextDay, .secondDay]
                 static let all: ShippingOptions = [.express, .priority, .standard]
+
                 typealias RawValue = UInt8
+
                 var rawValue: RawValue
+
                 init() {
                     self.rawValue = 0
                 }
+
                 init(rawValue: RawValue) {
                     self.rawValue = rawValue
                 }
+
                 static let nextDay: Self =
                     Self (rawValue: 1 << Options.nextDay.rawValue)
+
                 static let secondDay: Self =
                     Self (rawValue: 1 << Options.secondDay.rawValue)
+
                 static let priority: Self =
                     Self (rawValue: 1 << Options.priority.rawValue)
+
                 static let standard: Self =
                     Self (rawValue: 1 << Options.standard.rawValue)
+            }
+
+            extension ShippingOptions: OptionSet {
             }
             """,
             macros: testMacros
@@ -232,11 +248,12 @@ final class MacroToolkitTests: XCTestCase {
             public enum Color {
                 case red, green, blue
                 case gray(darkness: Float)
+
                 public enum Meta {
                     case red
-                case green
-                case blue
-                case gray
+                    case green
+                    case blue
+                    case gray
                     public init(_ __macro_local_6parentfMu_: Color) {
                         switch __macro_local_6parentfMu_ {
                             case .red:
@@ -276,11 +293,11 @@ final class MacroToolkitTests: XCTestCase {
 
                 var propertyWithSameName: Bool
 
-                func randomFunction() {
-                }
+                func randomFunction() {}
+
                 enum CodingKeys: String, CodingKey {
                     case propertyWithOtherName = "OtherName"
-                case propertyWithSameName
+                    case propertyWithSameName
                 }
             }
             """,

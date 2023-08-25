@@ -105,8 +105,8 @@ extension FunctionDeclSyntax {
             \.signature,
             signature
                 .with(
-                    \.input,
-                    ParameterClauseSyntax(parameterList: parameters.asParameterList)
+                    \.parameterClause,
+                    FunctionParameterClauseSyntax(parameters: parameters.asParameterList)
                 )
         )
     }
@@ -118,15 +118,15 @@ extension FunctionDeclSyntax {
                 \.signature,
                 signature
                     .with(
-                        \.output,
+                        \.returnClause,
                         ReturnClauseSyntax(
                             leadingTrivia: " ",
-                            returnType: type._syntax
+                            type: type._syntax
                         )
                     )
             )
         } else {
-            return with(\.signature, signature.with(\.output, nil))
+            return with(\.signature, signature.with(\.returnClause, nil))
         }
     }
 
@@ -181,6 +181,6 @@ extension CodeBlockSyntax {
 extension DeclGroupSyntax {
     /// Gets whether a declaration group has the `public` access level modifier.
     public var isPublic: Bool {
-        modifiers?.contains { $0.name.tokenKind == .keyword(.public) } == true
+        modifiers.contains { $0.name.tokenKind == .keyword(.public) } == true
     }
 }

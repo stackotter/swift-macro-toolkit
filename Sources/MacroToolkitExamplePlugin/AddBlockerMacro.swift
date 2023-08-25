@@ -16,25 +16,25 @@ public struct AddBlockerMacro: ExpressionMacro {
         override func visit(
             _ node: BinaryOperatorExprSyntax
         ) -> ExprSyntax {
-            if node.operatorToken.text == "+" {
+            if node.operator.text == "+" {
                 let messageID = MessageID(domain: "ExampleMacros", id: "addBlocker")
                 diagnostics.append(
-                    DiagnosticBuilder(for: node.operatorToken)
+                    DiagnosticBuilder(for: node.operator)
                         .message("blocked an add; did you mean to subtract?")
                         .messageID(messageID)
                         .severity(.warning)
                         .suggestReplacement(
                             "use '-'",
-                            old: node.operatorToken,
-                            new: node.operatorToken.with(\.tokenKind, .binaryOperator("-"))
+                            old: node.operator,
+                            new: node.operator.with(\.tokenKind, .binaryOperator("-"))
                         )
                         .build()
                 )
 
                 return ExprSyntax(
                     node.with(
-                        \.operatorToken,
-                        node.operatorToken.with(\.tokenKind, .binaryOperator("-"))
+                        \.operator,
+                         node.operator.with(\.tokenKind, .binaryOperator("-"))
                     )
                 )
             }

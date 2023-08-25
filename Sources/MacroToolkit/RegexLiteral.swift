@@ -11,12 +11,12 @@ public struct RegexLiteral: LiteralProtocol {
 
     /// On macOS 13.0 and up you can use ``RegexLiteral/regexValue()`` to get the parsed regex value.
     public var value: String {
-        _syntax.regexPattern.text
+        _syntax.regex.text
     }
 
     /// Rethrows parsing errors thrown by the `Regex` initializer.
     @available(macOS 13.0, *)
     public func regexValue() throws -> Regex<AnyRegexOutput> {
-        return try Regex(_syntax.regexPattern.text)
+        return try Regex(_syntax.regex.text)
     }
 }

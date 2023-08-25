@@ -16,11 +16,11 @@ public struct Function {
     }
 
     public var identifier: String {
-        _syntax.identifier.text
+        _syntax.name.text
     }
 
     public var returnType: Type? {
-        (_syntax.signature.output?.returnType).map(Type.init)
+        (_syntax.signature.returnClause?.type).map(Type.init)
     }
 
     public var returnsVoid: Bool {
@@ -36,17 +36,17 @@ public struct Function {
     }
 
     public var parameters: [FunctionParameter] {
-        Array(_syntax.signature.input.parameterList).map(FunctionParameter.init)
+        Array(_syntax.signature.parameterClause.parameters).map(FunctionParameter.init)
     }
 
     public var attributes: [AttributeListElement] {
-        _syntax.attributes.map(Array.init)?.map { attribute in
+        _syntax.attributes.map { attribute in
             switch attribute {
                 case .attribute(let attributeSyntax):
                     return .attribute(Attribute(attributeSyntax))
                 case .ifConfigDecl(let ifConfigDeclSyntax):
                     return .conditionalCompilationBlock(ConditionalCompilationBlock(ifConfigDeclSyntax))
             }
-        } ?? []
+        }
     }
 }
