@@ -1,7 +1,7 @@
 import SwiftSyntax
 
-/// Wraps a constrained sugar type (i.e. `any Protocol` or `some Protocol`).
-public struct ConstrainedSugarType: TypeProtocol {
+/// Wraps a `some` or `any` type (i.e. `any Protocol` or `some Protocol`).
+public struct SomeOrAnyType: TypeProtocol {
     public var _baseSyntax: SomeOrAnyTypeSyntax
     public var _attributedSyntax: AttributedTypeSyntax?
 

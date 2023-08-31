@@ -11,8 +11,8 @@ public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
     /// A composition of two types (e.g. `Encodable & Decodable`). Used to
     /// combine protocol requirements.
     case composition(CompositionType)
-    /// A sugared protocl type (e.g. `any T` or `some T`).
-    case constrainedSugar(ConstrainedSugarType)
+    /// A some or any protocol type (e.g. `any T` or `some T`).
+    case someOrAny(SomeOrAnyType)
     /// A dictionary type (e.g. `[Int: String]`).
     case dictionary(DictionaryType)
     /// A function type (e.g. `() -> ()`).
@@ -43,7 +43,7 @@ public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             case .array(let type): type
             case .classRestriction(let type): type
             case .composition(let type): type
-            case .constrainedSugar(let type): type
+            case .someOrAny(let type): type
             case .dictionary(let type): type
             case .function(let type): type
             case .implicitlyUnwrappedOptional(let type): type
@@ -65,7 +65,7 @@ public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             case .array(let type): type
             case .classRestriction(let type): type
             case .composition(let type): type
-            case .constrainedSugar(let type): type
+            case .someOrAny(let type): type
             case .dictionary(let type): type
             case .function(let type): type
             case .implicitlyUnwrappedOptional(let type): type
@@ -96,8 +96,8 @@ public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             self = .classRestriction(type)
         } else if let type = CompositionType(syntax) {
             self = .composition(type)
-        } else if let type = ConstrainedSugarType(syntax) {
-            self = .constrainedSugar(type)
+        } else if let type = SomeOrAnyType(syntax) {
+            self = .someOrAny(type)
         } else if let type = DictionaryType(syntax) {
             self = .dictionary(type)
         } else if let type = FunctionType(syntax) {

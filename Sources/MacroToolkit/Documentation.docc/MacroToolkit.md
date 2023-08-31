@@ -94,7 +94,7 @@ written it as `(((((((Void)))))))` (which is a valid way to write `Void`).
 - ``PackExpansionType``
 - ``PackReferenceType``
 - ``ClassRestrictionType``
-- ``ConstrainedSugarType``
+- ``SomeOrAnyType``
 - ``ImplicitlyUnwrappedOptionalType``
 
 ### Diagnostics
