@@ -1,8 +1,8 @@
+import MacroToolkit
 import SwiftDiagnostics
 import SwiftOperators
 import SwiftSyntax
 import SwiftSyntaxMacros
-import MacroToolkit
 
 // Modified from: https://github.com/DougGregor/swift-macro-examples/blob/f61ac7cdca8dc3557e53f86e7e03df1353908d3e/MacroExamplesPlugin/AddBlocker.swift
 /// Implementation of the `addBlocker` macro, which demonstrates how to
@@ -34,7 +34,7 @@ public struct AddBlockerMacro: ExpressionMacro {
                 return ExprSyntax(
                     node.with(
                         \.operator,
-                         node.operator.with(\.tokenKind, .binaryOperator("-"))
+                        node.operator.with(\.tokenKind, .binaryOperator("-"))
                     )
                 )
             }

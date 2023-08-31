@@ -109,7 +109,7 @@ extension OptionSetMacro: ExtensionMacro {
         // OptionSet already, don't add one.
         guard
             let (structDecl, _, _) = decodeExpansion(
-                of: node, 
+                of: node,
                 attachedTo: declaration,
                 in: context
             ),
@@ -120,19 +120,11 @@ extension OptionSetMacro: ExtensionMacro {
             return []
         }
 
-        // Since it creates an extension there is no need to add
-        // types already inherited by struct declaration
         return [
-            ExtensionDeclSyntax(
-                extendedType: type,
-                inheritanceClause: InheritanceClauseSyntax {
-                    InheritedTypeSyntax(
-                        type: IdentifierTypeSyntax(
-                            name: "OptionSet"
-                        )
-                    )
-                },
-                memberBlockBuilder: {}
+            try ExtensionDeclSyntax(
+                """
+                extension \(type): OptionSet {}
+                """
             )
         ]
     }
