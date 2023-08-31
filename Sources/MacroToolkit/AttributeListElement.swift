@@ -60,8 +60,11 @@ extension Sequence where Element == AttributeListElement {
 extension Collection where Element == AttributeListElement {
     /// Removes any attributes matching the specified attribute, and returns the result.
     public func removing(_ attribute: AttributeSyntax) -> [AttributeListElement] {
+        // TODO: Ensure that this only removes the attribute currently being evaluated and
+        //   not other ones (in case repeated macros are allowed as things such as markers).
         filter { element in
-            element.attribute?._syntax != attribute
+            (element.attribute?._syntax.attributeName).map(Type.init)?.normalizedDescription
+                != Type(attribute.attributeName).normalizedDescription
         }
     }
 }
