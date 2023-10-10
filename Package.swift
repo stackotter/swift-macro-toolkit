@@ -10,6 +10,14 @@ let package = Package(
         .library(
             name: "MacroToolkit",
             targets: ["MacroToolkit"]
+        ),
+        .library(
+            name: "DiagnosticBuilder",
+            targets: ["DiagnosticBuilder"]
+        ),
+        .library(
+            name: "MacroToolkitTypes",
+            targets: ["MacroToolkitTypes"]
         )
     ],
     dependencies: [
@@ -17,42 +25,41 @@ let package = Package(
             url: "https://github.com/apple/swift-syntax.git",
             exact: "509.0.0"
         ),
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
-        .package(url: "https://github.com/SwiftPackageIndex/SPIManifest.git", from: "0.12.0"),
+        .package(
+            url: "https://github.com/apple/swift-docc-plugin",
+            from: "1.3.0"
+        ),
+        .package(
+            url: "https://github.com/SwiftPackageIndex/SPIManifest.git",
+            .upToNextMinor(from: "0.12.0")
+        ),
     ],
     targets: [
-        // Implementations of macros tested by tests
-        .macro(
-            name: "MacroToolkitExamplePlugin",
-            dependencies: [
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-                "MacroToolkit",
-            ]
-        ),
-
-        // Declares macros used by tests
-        .target(name: "MacroToolkitExample", dependencies: ["MacroToolkitExamplePlugin"]),
-
         .target(
             name: "MacroToolkit",
             dependencies: [
+                .target(name: "DiagnosticBuilder"),
+                .target(name: "MacroToolkitTypes")
+            ]
+        ),
+
+        .target(
+            name: "DiagnosticBuilder",
+            dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             ]
         ),
 
-        .testTarget(
-            name: "MacroToolkitTests",
+        .target(
+            name: "MacroToolkitTypes",
             dependencies: [
-                "MacroToolkitExample",
-                "MacroToolkit",
+                .target(name: "DiagnosticBuilder"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             ]
-        ),
+        )
     ]
 )
