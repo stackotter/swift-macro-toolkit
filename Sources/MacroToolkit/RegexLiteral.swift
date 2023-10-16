@@ -15,7 +15,7 @@ public struct RegexLiteral: LiteralProtocol {
     }
 
     /// Rethrows parsing errors thrown by the `Regex` initializer.
-    @available(macOS 13.0, *)
+    @available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *)
     public func regexValue() throws -> Regex<AnyRegexOutput> {
         return try Regex(_syntax.regex.text)
     }
