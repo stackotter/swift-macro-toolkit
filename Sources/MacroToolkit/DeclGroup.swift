@@ -1,23 +1,33 @@
 import SwiftSyntax
 
+// TODO: Enable initializing from an `any DeclGroupSyntax`.
 /// Wraps a declaration group (a declaration with a scoped block of members).
 /// For example an `enum` or a `struct` etc.
-public struct DeclGroup {
-    /// The underlying syntax node.
-    public var _syntax: DeclGroupSyntax
+public struct DeclGroup<WrappedSyntax: DeclGroupSyntax>: DeclGroupProtocol {
+    public var _syntax: WrappedSyntax
 
-    /// Wraps a declaration group syntax node.
-    public init(_ syntax: DeclGroupSyntax) {
+    public init(_ syntax: WrappedSyntax) {
         _syntax = syntax
     }
 
-    /// Gets whether the declaration has the `public` access modifier.
-    public var isPublic: Bool {
-        _syntax.isPublic
+    public var identifier: String {
+        if let `struct` = asStruct {
+            `struct`.identifier
+        } else if let `enum` = asEnum {
+            `enum`.identifier
+        } else {
+            // TODO: Implement wrappers for all other decl group types.
+            fatalError("Unhandled decl group type '\(type(of: _syntax))'")
+        }
     }
 
-    /// Gets all of the declaration group's member declarations.
-    public var members: [Decl] {
-        _syntax.memberBlock.members.map(\.decl).map(Decl.init)
+    /// Gets the decl group as a struct if it's a struct.
+    public var asStruct: Struct? {
+        Struct(_syntax)
+    }
+
+    /// Gets the decl group as an enum if it's an enum.
+    public var asEnum: Enum? {
+        Enum(_syntax)
     }
 }

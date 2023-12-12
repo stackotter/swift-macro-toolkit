@@ -1,6 +1,7 @@
 import Foundation
 import SwiftSyntax
 
+// Possibly replace with the work done for ``Property`` (stealing the docs from here).
 /// A variable binding (e.g. the `a: Int = 3` part of `var a: Int = 3`)
 public struct VariableBinding {
     public var _syntax: PatternBindingSyntax

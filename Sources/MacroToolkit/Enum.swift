@@ -1,24 +1,18 @@
 import SwiftSyntax
 
-/// Wraps an enum declaration.
-public struct Enum {
+/// Wraps an `enum` declaration.
+public struct Enum: DeclGroupProtocol {
     public var _syntax: EnumDeclSyntax
-    
-    public init?(_ syntax: any DeclGroupSyntax) {
-        guard let syntax = syntax.as(EnumDeclSyntax.self) else {
-            return nil
-        }
-        _syntax = syntax
+
+    public var identifier: String {
+        _syntax.name.withoutTrivia().text
     }
 
     public init(_ syntax: EnumDeclSyntax) {
         _syntax = syntax
     }
 
-    public var identifier: String {
-        _syntax.name.withoutTrivia().text
-    }
-
+    /// The `enum`'s cases.
     public var cases: [EnumCase] {
         _syntax.memberBlock.members
             .compactMap { member in
@@ -27,9 +21,5 @@ public struct Enum {
             .flatMap { syntax in
                 syntax.elements.map(EnumCase.init)
             }
-    }
-
-    public var isPublic: Bool {
-        _syntax.isPublic
     }
 }

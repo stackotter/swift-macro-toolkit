@@ -9,4 +9,11 @@ public struct TupleType: TypeProtocol {
         _baseSyntax = syntax
         _attributedSyntax = attributedSyntax
     }
+
+    var elements: [Type] {
+        // TODO: Handle labels and the possible ellipsis
+        _baseSyntax.elements.map { element in
+            Type(element.type)
+        }
+    }
 }

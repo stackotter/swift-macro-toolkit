@@ -184,3 +184,13 @@ extension DeclGroupSyntax {
         modifiers.contains { $0.name.tokenKind == .keyword(.public) } == true
     }
 }
+
+extension ExprSyntaxProtocol {
+    public var parenthesized: TupleExprSyntax {
+        TupleExprSyntax(
+            leftParen: .leftParenToken(),
+            rightParen: .rightParenToken(),
+            elementsBuilder: { LabeledExprSyntax(expression: self) }
+        )
+    }
+}

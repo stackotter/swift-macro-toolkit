@@ -441,4 +441,102 @@ final class MacroToolkitTests: XCTestCase {
 
         XCTAssertEqual(variable.identifiers[0], "default")
     }
+
+    func testPropertyParsing() {
+        let decl: DeclSyntax = """
+            struct MyStruct {
+                var a: String, b: Int = 2
+                var c, d: Int
+                var e: Float
+                var f = 2
+                var g = ""
+                var (h, i) = (1.0, [])
+                var ((j, (k, l)), m): ((Int, (String, Float)), Int) = ((1, ("abc", 2)), 3)
+                var n = [1, 2.5]
+            }
+            """
+
+        guard let declGroup = decl.as(StructDeclSyntax.self).map(Struct.init) else {
+            XCTFail("Expected decl to be decl group")
+            return
+        }
+
+        // TODO: Make exprs and types equatable, will have to decide how whitespace
+        //   is treated. Easiest option would of course be to do text based comparison.
+        XCTAssertEqual(declGroup.properties.count, 14)
+
+        /// Type annotation in a multi-binding declaration.
+        let a = declGroup.properties[0]
+        XCTAssertEqual(a.identifier, "a")
+        XCTAssertEqual(a.type?.description, "String")
+        XCTAssertEqual(a.initialValue.debugDescription, "nil")
+        // Assignment in a multi-binding declaration.
+        let b = declGroup.properties[1]
+        XCTAssertEqual(b.identifier, "b")
+        XCTAssertEqual(b.type?.description, "Int")
+        XCTAssertEqual(b.initialValue?.asIntegerLiteral?.value, 2)
+
+        // The type of `c` should be inferred to be the same as `d` (`Int`), since `c`
+        // doesn't have an annotation.
+        let c = declGroup.properties[2]
+        XCTAssertEqual(c.identifier, "c")
+        XCTAssertEqual(c.type?.description, "Int")
+        XCTAssertEqual(c.initialValue.debugDescription, "nil")
+        // Simple annotated binding in a multi-binding declaration.
+        let d = declGroup.properties[3]
+        XCTAssertEqual(d.identifier, "d")
+        XCTAssertEqual(d.type?.description, "Int")
+        XCTAssertEqual(d.initialValue.debugDescription, "nil")
+
+        // Simple annotated binding in a single-binding declaration.
+        let e = declGroup.properties[4]
+        XCTAssertEqual(e.identifier, "e")
+        XCTAssertEqual(e.type?.description, "Float")
+        XCTAssertEqual(e.initialValue.debugDescription, "nil")
+
+        // Inferring a type from a literal.
+        let f = declGroup.properties[5]
+        XCTAssertEqual(f.identifier, "f")
+        XCTAssertEqual(f.type?.description, "Int")
+        XCTAssertEqual(f.initialValue?.asIntegerLiteral?.value, 2)
+        // Same as `f` but with a string literal.
+        let g = declGroup.properties[6]
+        XCTAssertEqual(g.identifier, "g")
+        XCTAssertEqual(g.type?.description, "String")
+        XCTAssertEqual(g.initialValue?.asStringLiteral?.value, "")
+
+        // Tuple binding with types inferred from literals.
+        let h = declGroup.properties[7]
+        XCTAssertEqual(h.identifier, "h")
+        XCTAssertEqual(h.type?.description, "Double")
+        XCTAssertEqual(h.initialValue?.asFloatLiteral?.value, 1.0)
+        let i = declGroup.properties[8]
+        XCTAssertEqual(i.identifier, "i")
+        XCTAssertEqual(i.type?.description, "Array<Any>")
+        XCTAssertEqual(i.initialValue?._syntax.description, "[]")
+
+        // A horrible nested annotated tuple binding with a literal initial value.
+        let j = declGroup.properties[9]
+        XCTAssertEqual(j.identifier, "j")
+        XCTAssertEqual(j.type?.description, "Int")
+        XCTAssertEqual(j.initialValue?.asIntegerLiteral?.value, 1)
+        let k = declGroup.properties[10]
+        XCTAssertEqual(k.identifier, "k")
+        XCTAssertEqual(k.type?.description, "String")
+        XCTAssertEqual(k.initialValue?.asStringLiteral?.value, "abc")
+        let l = declGroup.properties[11]
+        XCTAssertEqual(l.identifier, "l")
+        XCTAssertEqual(l.type?.description, "Float")
+        XCTAssertEqual(l.initialValue?.asIntegerLiteral?.value, 2)
+        let m = declGroup.properties[12]
+        XCTAssertEqual(m.identifier, "m")
+        XCTAssertEqual(m.type?.description, "Int")
+        XCTAssertEqual(m.initialValue?.asIntegerLiteral?.value, 3)
+
+        // Inferring the type of a non-empty array literal expression.
+        let n = declGroup.properties[13]
+        XCTAssertEqual(n.identifier, "n")
+        XCTAssertEqual(n.type?.description, "Array<Double>")
+        XCTAssertEqual(n.initialValue?._syntax.description, "[1, 2.5]")
+    }
 }

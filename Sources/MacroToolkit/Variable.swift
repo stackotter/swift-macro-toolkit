@@ -21,6 +21,7 @@ public struct Variable {
     /// The bindings within the variable declaration. A single variable declaration can
     /// define multiple bindings (e.g. `var a: Int, b: Int`).
     public var bindings: [VariableBinding] {
+        // TODO: Should bindings like `let (a, b) = (1, 2)` be split into `a = 1` and `b = 2`?
         _syntax.bindings.map(VariableBinding.init)
     }
 

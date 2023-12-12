@@ -13,7 +13,7 @@ public protocol ExprProtocol {
 extension ExprProtocol {
     /// Attempts to initialize the wrapper from an arbitrary expression (succeeds
     /// if the expression is the right type of syntax).
-    public init?(_ syntax: ExprSyntaxProtocol) {
+    public init?(_ syntax: any ExprSyntaxProtocol) {
         guard let syntax = syntax.as(WrappedSyntax.self) else {
             return nil
         }
