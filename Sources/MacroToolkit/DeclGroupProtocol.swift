@@ -38,7 +38,7 @@ extension DeclGroupProtocol {
     public var properties: [Property] {
         members.compactMap(\.asVariable).flatMap { variable in
             var bindings = variable._syntax.bindings.flatMap { binding in
-                Property.properties(from: binding)
+                Property.properties(from: binding, in: variable)
             }
             // For the declaration `var a, b: Int` where `a` doesn't have an annotation,
             // `a` gets given the type of `b` (`Int`). To implement this, we 'drag' the

@@ -446,13 +446,18 @@ final class MacroToolkitTests: XCTestCase {
         let decl: DeclSyntax = """
             struct MyStruct {
                 var a: String, b: Int = 2
+                @MyMacro
                 var c, d: Int
-                var e: Float
+                var e: Float {
+                    1.0
+                }
+                @MyPropertyWrapper
                 var f = 2
-                var g = ""
+                let g = ""
+                @MyMacro
                 var (h, i) = (1.0, [])
                 var ((j, (k, l)), m): ((Int, (String, Float)), Int) = ((1, ("abc", 2)), 3)
-                var n = [1, 2.5]
+                lazy var n = [1, 2.5]
             }
             """
 
@@ -470,6 +475,10 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(a.identifier, "a")
         XCTAssertEqual(a.type?.description, "String")
         XCTAssertEqual(a.initialValue.debugDescription, "nil")
+        XCTAssertEqual(a.isStored, true)
+        XCTAssertEqual(a.isLazy, false)
+        XCTAssertEqual(a.attributes.count, 0)
+        XCTAssertEqual(a.keyword, "var")
         // Assignment in a multi-binding declaration.
         let b = declGroup.properties[1]
         XCTAssertEqual(b.identifier, "b")
@@ -477,43 +486,55 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(b.initialValue?.asIntegerLiteral?.value, 2)
 
         // The type of `c` should be inferred to be the same as `d` (`Int`), since `c`
-        // doesn't have an annotation.
+        // doesn't have an annotation. The attribute should be ignored as it isn't
+        // attached to either of the properties, just the declaration of both together.
         let c = declGroup.properties[2]
         XCTAssertEqual(c.identifier, "c")
         XCTAssertEqual(c.type?.description, "Int")
         XCTAssertEqual(c.initialValue.debugDescription, "nil")
+        XCTAssertEqual(c.attributes.count, 0)
         // Simple annotated binding in a multi-binding declaration.
         let d = declGroup.properties[3]
         XCTAssertEqual(d.identifier, "d")
         XCTAssertEqual(d.type?.description, "Int")
         XCTAssertEqual(d.initialValue.debugDescription, "nil")
+        XCTAssertEqual(d.attributes.count, 0)
 
         // Simple annotated binding in a single-binding declaration.
         let e = declGroup.properties[4]
         XCTAssertEqual(e.identifier, "e")
         XCTAssertEqual(e.type?.description, "Float")
         XCTAssertEqual(e.initialValue.debugDescription, "nil")
+        XCTAssertEqual(e.isStored, false)
+        XCTAssert(e.getter != nil)
+        XCTAssert(e.setter == nil)
 
         // Inferring a type from a literal.
         let f = declGroup.properties[5]
         XCTAssertEqual(f.identifier, "f")
         XCTAssertEqual(f.type?.description, "Int")
         XCTAssertEqual(f.initialValue?.asIntegerLiteral?.value, 2)
+        XCTAssertEqual(f.attributes.count, 1)
         // Same as `f` but with a string literal.
         let g = declGroup.properties[6]
         XCTAssertEqual(g.identifier, "g")
         XCTAssertEqual(g.type?.description, "String")
         XCTAssertEqual(g.initialValue?.asStringLiteral?.value, "")
+        XCTAssertEqual(g.keyword, "let")
 
-        // Tuple binding with types inferred from literals.
+        // Tuple binding with types inferred from literals. The attribute should be
+        // ignored as it isn't attached to either of the properties, just the declaration
+        // of both together.
         let h = declGroup.properties[7]
         XCTAssertEqual(h.identifier, "h")
         XCTAssertEqual(h.type?.description, "Double")
         XCTAssertEqual(h.initialValue?.asFloatLiteral?.value, 1.0)
+        XCTAssertEqual(h.attributes.count, 0)
         let i = declGroup.properties[8]
         XCTAssertEqual(i.identifier, "i")
         XCTAssertEqual(i.type?.description, "Array<Any>")
         XCTAssertEqual(i.initialValue?._syntax.description, "[]")
+        XCTAssertEqual(i.attributes.count, 0)
 
         // A horrible nested annotated tuple binding with a literal initial value.
         let j = declGroup.properties[9]
@@ -538,5 +559,6 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(n.identifier, "n")
         XCTAssertEqual(n.type?.description, "Array<Double>")
         XCTAssertEqual(n.initialValue?._syntax.description, "[1, 2.5]")
+        XCTAssertEqual(n.isLazy, true)
     }
 }

@@ -1,8 +1,17 @@
 import SwiftSyntax
 
+// TODO: Handle all modifiers
+// TODO: Make keyword enum-typed instead of stringly-typed
+// TODO: Improve attribute API, perhaps with a way to ignore attributes in compiler
+//   directive control flow blocks.
+// TODO: Implement a way for devs to easily verify the usage of their macros, e.g. not
+//   attached to the same decl twice, only attached to static vars, etc.
 /// A property of a declaration group such as a `struct`.
 public struct Property {
     public var _syntax: TokenSyntax
+    public var attributes: [AttributeListElement]
+    public var isLazy: Bool
+    public var keyword: String
     public var identifier: String
     public var type: Type?
     public var initialValue: Expr?
@@ -20,7 +29,9 @@ public struct Property {
         getter == nil
     }
 
-    static func properties(from binding: PatternBindingSyntax) -> [Property] {
+    static func properties(from binding: PatternBindingSyntax, in decl: Variable)
+        -> [Property]
+    {
         let accessors: [AccessorDeclSyntax] = switch binding.accessorBlock?.accessors {
             case .accessors(let block):
                 Array(block)
@@ -29,11 +40,19 @@ public struct Property {
             case .none:
                 []
         }
+        let attributes: [AttributeListElement] = if decl.bindings.count == 1 {
+            decl.attributes
+        } else {
+            []
+        }
         return properties(
             pattern: binding.pattern,
             initialValue: (binding.initializer?.value).map(Expr.init),
             type: (binding.typeAnnotation?.type).map(Type.init),
-            accessors: accessors
+            accessors: accessors,
+            attributes: attributes,
+            keyword: decl._syntax.bindingSpecifier.text,
+            isLazy: decl._syntax.modifiers.contains { $0.name.text == "lazy" }
         )
     }
 
@@ -41,7 +60,10 @@ public struct Property {
         pattern: PatternSyntax,
         initialValue: Expr?,
         type: Type?,
-        accessors: [AccessorDeclSyntax]
+        accessors: [AccessorDeclSyntax],
+        attributes: [AttributeListElement],
+        keyword: String,
+        isLazy: Bool
     ) -> [Property] {
         switch pattern.asProtocol(PatternSyntaxProtocol.self) {
             case let pattern as IdentifierPatternSyntax:
@@ -67,6 +89,9 @@ public struct Property {
                 return [
                     Property(
                         _syntax: pattern.identifier,
+                        attributes: attributes,
+                        isLazy: isLazy,
+                        keyword: keyword,
                         identifier: pattern.identifier.text,
                         type: type,
                         initialValue: initialValue,
@@ -117,10 +142,10 @@ public struct Property {
                         tupleType?.elements[index]
                     }
 
-                    // Tuple bindings can't have accessors
+                    // Tuple bindings can't have accessors or attributes (i.e. property wrappers or macros)
                     return properties(
                         pattern: element.pattern, initialValue: initialValue, type: type,
-                        accessors: []
+                        accessors: [], attributes: [], keyword: keyword, isLazy: isLazy
                     )
                 }
             case _ as WildcardPatternSyntax:
