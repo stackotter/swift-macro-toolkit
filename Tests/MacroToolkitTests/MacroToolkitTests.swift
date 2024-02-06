@@ -16,6 +16,10 @@ let testMacros: [String: Macro.Type] = [
     "CustomCodable": CustomCodableMacro.self,
     "CodableKey": CodableKeyMacro.self,
     "DictionaryStorage": DictionaryStorageMacro.self,
+    "AddAsyncInterface": AddAsyncInterfaceMacro.self,
+    "AddAsyncInterfaceAllMembers": AddAsyncInterfaceAllMembersMacro.self,
+    "AddAsyncImplementation": AddAsyncImplementationMacro.self,
+    "AddAsyncImplementationAllMembers": AddAsyncImplementationAllMembersMacro.self,
 ]
 
 final class MacroToolkitTests: XCTestCase {
@@ -560,5 +564,121 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(n.type?.description, "Array<Double>")
         XCTAssertEqual(n.initialValue?._syntax.description, "[1, 2.5]")
         XCTAssertEqual(n.isLazy, true)
+    }
+    
+    func testAsyncInterfaceMacro() throws {
+        assertMacroExpansion(
+            """
+            protocol API {
+                @AddAsyncInterface
+                func request(completion: (Int) -> Void)
+            }
+            """,
+            expandedSource:
+            """
+            protocol API {
+                func request(completion: (Int) -> Void)
+            
+                func request()  async -> Int
+            }
+            """,
+            macros: testMacros
+        )
+    }
+    
+    func testAsyncInterfaceAllMembersMacro() throws {
+        assertMacroExpansion(
+            """
+            @AddAsyncInterfaceAllMembers
+            protocol API {
+                func request1(completion: (Int) -> Void)
+                func request2(completion: (String) -> Void)
+            }
+            """,
+            expandedSource:
+            """
+            protocol API {
+                func request1(completion: (Int) -> Void)
+                func request2(completion: (String) -> Void)
+            
+                func request1()  async -> Int
+
+                func request2()  async -> String
+            }
+            """,
+            macros: testMacros
+        )
+    }
+    func testAsyncImplementationMacro() throws {
+        assertMacroExpansion(
+            """
+            struct Client {
+                @AddAsyncImplementation
+                func request1(completion: (Int) -> Void) {
+                    completion(0)
+                }
+            }
+            """,
+            expandedSource:
+            """
+            struct Client {
+                func request1(completion: (Int) -> Void) {
+                    completion(0)
+                }
+            
+                func request1()  async -> Int {
+                    await withCheckedContinuation { continuation in
+                        request1() { returnValue in
+                            continuation.resume(returning: returnValue)
+                        }
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+    }
+    func testAsyncImplementationAllMembersMacro() throws {
+        assertMacroExpansion(
+            """
+            @AddAsyncImplementationAllMembers
+            struct Client {
+                func request1(completion: (Int) -> Void) {
+                    completion(0)
+                }
+                func request2(completion: (String) -> Void) {
+                    completion("")
+                }
+            }
+            """,
+            expandedSource:
+            """
+            struct Client {
+                func request1(completion: (Int) -> Void) {
+                    completion(0)
+                }
+                func request2(completion: (String) -> Void) {
+                    completion("")
+                }
+            
+                func request1()  async -> Int {
+                    await withCheckedContinuation { continuation in
+                        request1() { returnValue in
+                            continuation.resume(returning: returnValue)
+                        }
+                    }
+                }
+
+                func request2()  async -> String {
+                    await withCheckedContinuation { continuation in
+                        request2() { returnValue in
+                            continuation.resume(returning: returnValue)
+                        }
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
     }
 }
