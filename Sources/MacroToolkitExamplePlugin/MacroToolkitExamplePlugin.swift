@@ -13,9 +13,6 @@ struct MacroToolkitExamplePlugin: CompilerPlugin {
         CustomCodableMacro.self,
         CodableKeyMacro.self,
         DictionaryStorageMacro.self,
-        AddAsyncInterfaceMacro.self,
-        AddAsyncInterfaceAllMembersMacro.self,
-        AddAsyncImplementationMacro.self,
-        AddAsyncImplementationAllMembersMacro.self,
+        AddAsyncAllMembersMacro.self,
     ]
 }

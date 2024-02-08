@@ -37,18 +37,6 @@ public macro CustomCodable() =
 public macro DictionaryStorage() =
     #externalMacro(module: "MacroToolkitExamplePlugin", type: "DictionaryStorageMacro")
 
-@attached(peer, names: overloaded)
-public macro AddAsyncInterface() =
-    #externalMacro(module: "MacroToolkitExamplePlugin", type: "AddAsyncInterfaceMacro")
-
 @attached(member, names: arbitrary)
-public macro AddAsyncInterfaceAllMembers() =
-    #externalMacro(module: "MacroToolkitExamplePlugin", type: "AddAsyncInterfaceAllMembersMacro")
-
-@attached(peer, names: overloaded)
-public macro AddAsyncImplementation() =
-    #externalMacro(module: "MacroToolkitExamplePlugin", type: "AddAsyncImplementationMacro")
-
-@attached(member, names: arbitrary)
-public macro AddAsyncImplementationAllMembers() =
-    #externalMacro(module: "MacroToolkitExamplePlugin", type: "AddAsyncImplementationAllMembersMacro")
+public macro AddAsyncAllMembers() =
+    #externalMacro(module: "MacroToolkitExamplePlugin", type: "AddAsyncAllMembersMacro")
