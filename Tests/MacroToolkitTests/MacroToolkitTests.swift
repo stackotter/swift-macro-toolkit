@@ -16,10 +16,7 @@ let testMacros: [String: Macro.Type] = [
     "CustomCodable": CustomCodableMacro.self,
     "CodableKey": CodableKeyMacro.self,
     "DictionaryStorage": DictionaryStorageMacro.self,
-    "AddAsyncInterface": AddAsyncInterfaceMacro.self,
-    "AddAsyncInterfaceAllMembers": AddAsyncInterfaceAllMembersMacro.self,
-    "AddAsyncImplementation": AddAsyncImplementationMacro.self,
-    "AddAsyncImplementationAllMembers": AddAsyncImplementationAllMembersMacro.self,
+    "AddAsyncAllMembers": AddAsyncAllMembersMacro.self,
 ]
 
 final class MacroToolkitTests: XCTestCase {
@@ -570,7 +567,7 @@ final class MacroToolkitTests: XCTestCase {
         assertMacroExpansion(
             """
             protocol API {
-                @AddAsyncInterface
+                @AddAsync
                 func request(completion: (Int) -> Void)
             }
             """,
@@ -589,7 +586,7 @@ final class MacroToolkitTests: XCTestCase {
     func testAsyncInterfaceAllMembersMacro() throws {
         assertMacroExpansion(
             """
-            @AddAsyncInterfaceAllMembers
+            @AddAsyncAllMembers
             protocol API {
                 func request1(completion: (Int) -> Void)
                 func request2(completion: (String) -> Void)
@@ -613,7 +610,7 @@ final class MacroToolkitTests: XCTestCase {
         assertMacroExpansion(
             """
             struct Client {
-                @AddAsyncImplementation
+                @AddAsync
                 func request1(completion: (Int) -> Void) {
                     completion(0)
                 }
@@ -641,7 +638,7 @@ final class MacroToolkitTests: XCTestCase {
     func testAsyncImplementationAllMembersMacro() throws {
         assertMacroExpansion(
             """
-            @AddAsyncImplementationAllMembers
+            @AddAsyncAllMembers
             struct Client {
                 func request1(completion: (Int) -> Void) {
                     completion(0)

@@ -4,7 +4,7 @@ import SwiftSyntaxMacros
 
 // Modified from: https://github.com/DougGregor/swift-macro-examples/blob/f61ac7cdca8dc3557e53f86e7e03df1353908d3e/MacroExamplesPlugin/AddAsyncMacro.swift
 
-enum AddAsyncImplementationCore {
+enum AddAsyncMacroCore {
     static func expansion(of node: AttributeSyntax?, providingFunctionOf declaration: some DeclSyntaxProtocol) throws -> DeclSyntax {
         // Only on functions at the moment.
         guard let function = Function(declaration) else {
@@ -63,7 +63,8 @@ enum AddAsyncImplementationCore {
 
         let callArguments = newParameters.asPassthroughArguments
 
-        let switchBody: ExprSyntax =
+        let newBody = function._syntax.body.map { _ in
+            let switchBody: ExprSyntax =
             """
             switch returnValue {
                 case .success(let value):
@@ -72,13 +73,13 @@ enum AddAsyncImplementationCore {
                     continuation.resume(throwing: error)
             }
             """
-
-        let continuationExpr =
+            
+            let continuationExpr =
             isResultReturn
-                ? "try await withCheckedThrowingContinuation { continuation in"
-                : "await withCheckedContinuation { continuation in"
-
-        let newBody: ExprSyntax =
+            ? "try await withCheckedThrowingContinuation { continuation in"
+            : "await withCheckedContinuation { continuation in"
+            
+            let newBody: ExprSyntax =
             """
             \(raw: continuationExpr)
                 \(raw: function.identifier)(\(raw: callArguments.joined(separator: ", "))) { returnValue in
@@ -86,17 +87,21 @@ enum AddAsyncImplementationCore {
                 }
             }
             """
-
+            return CodeBlockSyntax([newBody])
+        }
         // TODO: Make better codeblock init
-        let newFunc =
+        var newFunc =
             function._syntax
-                .withParameters(newParameters)
-                .withReturnType(successReturnType)
-                .withAsyncModifier()
-                .withThrowsModifier(isResultReturn)
-                .withBody(CodeBlockSyntax([newBody]))
-                .withAttributes(filteredAttributes)
-                .withLeadingBlankLine()
+            .withParameters(newParameters)
+            .withReturnType(successReturnType)
+            .withAsyncModifier()
+            .withThrowsModifier(isResultReturn)
+            .withAttributes(filteredAttributes)
+            .withLeadingBlankLine()
+
+        if let newBody {
+            newFunc = newFunc.withBody(newBody)
+        }
 
         return DeclSyntax(newFunc)
     }
