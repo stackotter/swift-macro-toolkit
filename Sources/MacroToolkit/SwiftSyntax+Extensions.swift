@@ -79,7 +79,7 @@ extension FunctionDeclSyntax {
                 .with(
                     \.effectSpecifiers,
                     effectSpecifiersOrDefault
-                        .with(\.asyncSpecifier, isPresent ? " async" : nil)
+                        .with(\.asyncSpecifier, isPresent ? "async" : nil)
                 )
         )
     }
