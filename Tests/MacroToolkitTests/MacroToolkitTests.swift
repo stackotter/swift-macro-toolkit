@@ -869,4 +869,14 @@ final class MacroToolkitTests: XCTestCase {
 
         XCTAssertEqual(dcs.description, "Tuple<each Elements>")
     }
+    
+    func testIsOptional() {
+        let type1: `Type` = "Int?"
+        let type2: `Type` = "Optional<Int>"
+        let type3: `Type` = "Array<Int>"
+        
+        XCTAssert(type1.isOptional)
+        XCTAssert(type2.isOptional)
+        XCTAssertFalse(type3.isOptional)
+    }
 }
