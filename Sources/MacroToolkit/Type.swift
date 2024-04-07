@@ -135,20 +135,7 @@ public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
 
     /// A normalized description of the type (e.g. for `()` this would be `Void`).
     public var normalizedDescription: String {
-        // TODO: Implement proper type normalization
-        // TODO: Normalize types nested within the type too (e.g. the parameter types of a function type)
-        if let tupleSyntax = _syntax.as(TupleTypeSyntax.self) {
-            if tupleSyntax.elements.count == 0 {
-                return "Void"
-            } else if tupleSyntax.elements.count == 1, let element = tupleSyntax.elements.first {
-                // TODO: Can we assume that we won't get a single-element tuple with a label (which would be invalid anyway)?
-                return element.type.withoutTrivia().description
-            } else {
-                return _syntax.withoutTrivia().description
-            }
-        } else {
-            return _syntax.withoutTrivia().description
-        }
+        self.normalized()._syntax.withoutTrivia().description
     }
 
     /// Gets whether the type is a void type (i.e. `Void`, `()`, `(Void)`, `((((()))))`, etc.).
