@@ -140,7 +140,7 @@ public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
 
     /// Gets whether the type is a void type (i.e. `Void`, `()`, `(Void)`, `((((()))))`, etc.).
     public var isVoid: Bool {
-        normalizedDescription == "Void"
+        normalizedDescription == "\(Void.self)"
     }
 
     // TODO: Generate type conversions with macro?
