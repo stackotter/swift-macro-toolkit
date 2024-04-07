@@ -678,4 +678,195 @@ final class MacroToolkitTests: XCTestCase {
             macros: testMacros
         )
     }
+    
+    func testSimpleDictionaryNormalizarion() {
+//        let decl: DeclSyntax = """
+//            var items: [Int] {
+//                [1, 2].map { (_) in
+//                    3
+//                }
+//            }
+//            """
+        
+        let decl: DeclSyntax = """
+            var items: [String: Int]
+            """
+        
+        guard let variable = Decl(decl).asVariable else {
+            XCTFail("Expected decl to be variable")
+            return
+        }
+        
+        guard let type = variable.bindings[0].type else {
+            XCTFail("Expected type of variable")
+            return
+        }
+        
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "Dictionary<String, Int>")
+    }
+    
+    func testComplexDictionaryWithArrayNormalizarion() {
+        
+        let type: Type = "[String: [[Any]]]"
+        
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "Dictionary<String, Array<Array<Any>>>")
+    }
+    
+    func testNormalizedDecription() {
+        let type: Type = "(())"
+        
+        XCTAssertEqual(type.normalizedDescription, "()")
+    }
+    
+    func testIsVoid() {
+        let type: Type = "(())"
+        
+        XCTAssert(type.isVoid)
+    }
+    
+    func testNormalizedVoid() {
+        let type: Type = "((()))"
+
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "()")
+    }
+    
+    func testNormalizedAttributedTuple() {
+        
+        let declSyntax: DeclSyntax = """
+        let interestingType: (inout [Int], String) -> Float = { _,_ in
+            return 3
+        }
+        """
+
+        guard let variable = Decl(declSyntax).asVariable else {
+            XCTFail("Expected decl to be variable")
+            return
+        }
+        
+        guard let type = variable.bindings[0].type else {
+            XCTFail("Expected type in bindings")
+            return
+        }
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "(inout Array<Int>, String) -> Float")
+    }
+    
+    func testMemeberWithGenericNormalizarion() {
+        class TestClass {
+            struct TestMemberStruct<Value> {
+                var value: Value
+            }
+        }
+                
+        let type: `Type` = "(inout TestClass.TestMemberStruct<[any Hashable]>) -> ()"
+        
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "(inout TestClass.TestMemberStruct<Array<any Hashable>>) -> ()")
+    }
+    
+    func testMetatypeNormalizarion() {
+        let type: `Type` = "(inout TestClass.Type) -> Void"
+        
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "(inout TestClass.Type) -> ()")
+    }
+    
+    func testSuppressed() {
+        let type: `Type` = "~Copyable"
+                
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "~Copyable")
+    }
+    
+    func testNormalizedOptional() {
+        let type: `Type` = "((inout Int?) -> Void)?"
+        
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "Optional<((inout Optional<Int>) -> ())>")
+    }
+    
+    func testNormalizedSimple() {
+        let type: `Type` = "MyClass<[String]>"
+        
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "MyClass<Array<String>>")
+    }
+       
+    func testComposedNormalized() {
+        let type1: `Type` = "any Decodable & Identifiable"
+        let type2: `Type` = "(inout any Decodable & Identifiable) -> Void"
+        let type3: `Type` = "(inout Decodable & Codable) -> ([Int])"
+        
+        let dcs1 = type1.normalized()
+        let dcs2 = type2.normalized()
+        let dcs3 = type3.normalized()
+
+        XCTAssertEqual(dcs1.description, "any Decodable & Identifiable")
+        XCTAssertEqual(dcs2.description, "(inout any Decodable & Identifiable) -> ()")
+        XCTAssertEqual(dcs3.description, "(inout Decodable & Codable) -> (Array<Int>)")
+    }
+    
+    func testSomeOrAnyNormalized() {
+        let typeComosed: `Type` = "any Decodable & Identifiable"
+        let typeGeneric: `Type` = "some Sequence<[String]>"
+        
+        let dcs = typeComosed.normalized()
+        let dcss = typeGeneric.normalized()
+
+        XCTAssertEqual(dcs.description, "any Decodable & Identifiable")
+        XCTAssertEqual(dcss.description, "some Sequence<Array<String>>")
+    }
+    
+    func testImplicitylUnwrappedOptionalNormalized() {
+        let type1: `Type` = "MyClass<[String]>!"
+        let type2: `Type` = "((inout [String: Int]) -> Void)!"
+
+        let dcs = type1.normalized()
+        let dcss = type2.normalized()
+
+        XCTAssertEqual(dcs.description, "MyClass<Array<String>>!")
+        XCTAssertEqual(dcss.description, "((inout Dictionary<String, Int>) -> ())!")
+    }
+    
+    @available(macOS 14.0.0, *)
+    func testPackExpansionNormalized() {
+        
+        struct Tuple<each Elements> {
+          var elements: (repeat each Elements)
+
+          subscript<Value>(keyPath: KeyPath<(repeat each Elements), Value>) -> Value {
+            return elements[keyPath: keyPath]
+          }
+        }
+        
+        let type1: `Type` = "(repeat each Elements)"
+        let type2: `Type` = "(keyPath: KeyPath<(repeat each Elements), Value>) -> Value"
+
+        let dcs = type1.normalized()
+        let dcss = type2.normalized()
+
+        XCTAssertEqual(dcs.description, "(repeat each Elements)")
+        XCTAssertEqual(dcss.description, "(keyPath: KeyPath<(repeat each Elements), Value>) -> Value")
+    }
+    
+    func testPackReferenceNormalized() {
+        let type: `Type` = "Tuple<each Elements>"
+
+        let dcs = type.normalized()
+
+        XCTAssertEqual(dcs.description, "Tuple<each Elements>")
+    }
 }
