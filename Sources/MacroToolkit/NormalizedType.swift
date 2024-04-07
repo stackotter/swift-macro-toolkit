@@ -100,4 +100,29 @@ public enum NormalizedType: TypeProtocol, SyntaxExpressibleByStringInterpolation
     public init(stringInterpolation: SyntaxStringInterpolation) {
         self.init(TypeSyntax(stringInterpolation: stringInterpolation))
     }
+    
+    /// Gets whether the type is optional
+    public var isOptional: Bool {
+        if case .simple(let simpleType) = self {
+            return simpleType.name == "Optional"
+        }
+        return false
+    }
+
+    // TODO: Generate type conversions with macro?
+    /// Attempts to get the type as a simple type.
+    public var asSimpleType: NormalizedSimpleType? {
+        switch self {
+            case .simple(let type): type
+            default: nil
+        }
+    }
+
+    /// Attempts to get the type as a function type.
+    public var asFunctionType: NormalizedFunctionType? {
+        switch self {
+            case .function(let type): type
+            default: nil
+        }
+    }
 }
