@@ -39,7 +39,7 @@ final class MacroToolkitTests: XCTestCase {
 
                 @Before
                 @After
-                func d(a: Int, for b: String, _ value: Double)  async -> Bool {
+                func d(a: Int, for b: String, _ value: Double) async -> Bool {
                     await withCheckedContinuation { continuation in
                         d(a: a, for: b, value) { returnValue in
                             continuation.resume(returning: returnValue)
@@ -576,7 +576,7 @@ final class MacroToolkitTests: XCTestCase {
             protocol API {
                 func request(completion: (Int) -> Void)
             
-                func request()  async -> Int
+                func request() async -> Int
             }
             """,
             macros: testMacros
@@ -598,9 +598,9 @@ final class MacroToolkitTests: XCTestCase {
                 func request1(completion: (Int) -> Void)
                 func request2(completion: (String) -> Void)
             
-                func request1()  async -> Int
+                func request1() async -> Int
 
-                func request2()  async -> String
+                func request2() async -> String
             }
             """,
             macros: testMacros
@@ -623,7 +623,7 @@ final class MacroToolkitTests: XCTestCase {
                     completion(0)
                 }
             
-                func request1()  async -> Int {
+                func request1() async -> Int {
                     await withCheckedContinuation { continuation in
                         request1() { returnValue in
                             continuation.resume(returning: returnValue)
@@ -658,7 +658,7 @@ final class MacroToolkitTests: XCTestCase {
                     completion("")
                 }
             
-                func request1()  async -> Int {
+                func request1() async -> Int {
                     await withCheckedContinuation { continuation in
                         request1() { returnValue in
                             continuation.resume(returning: returnValue)
@@ -666,7 +666,7 @@ final class MacroToolkitTests: XCTestCase {
                     }
                 }
 
-                func request2()  async -> String {
+                func request2() async -> String {
                     await withCheckedContinuation { continuation in
                         request2() { returnValue in
                             continuation.resume(returning: returnValue)
