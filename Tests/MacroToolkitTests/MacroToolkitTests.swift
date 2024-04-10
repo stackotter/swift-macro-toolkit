@@ -701,7 +701,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertFalse(type3.isOptional)
     }
     
-    func testNormalizedVoid() {
+    func testNormalizationVoid() {
         let type: `Type` = "((()))"
 
         let normalizedType = type.normalized()
@@ -709,7 +709,15 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "()")
     }
     
-    func testNestedArraysNormalizarion() {
+    func testNormalizationMultipleVoidWithOptional() {
+        let type: `Type` = "(((((()))?)))"
+
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "(Optional<()>)")
+    }
+    
+    func testNormalizationNestedArrays() {
         let type: `Type` = "[[Int]]"
         
         let normalizedType = type.normalized()
@@ -717,7 +725,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "Array<Array<Int>>")
     }
     
-    func testClassRestrictionNormalized() {
+    func testNormalizationClassRestriction() {
         let decl: DeclSyntax = """
             protocol TestProtocol: class { }
             """
@@ -735,7 +743,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "AnyObject")
     }
     
-    func testCompositionNormalized() {
+    func testNormalizationComposition() {
         let type1: `Type` = "any Decodable & Identifiable"
         let type2: `Type` = "(inout any Decodable & Identifiable) -> Void"
         let type3: `Type` = "(inout Decodable & Codable) -> ([Int])"
@@ -749,7 +757,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType3.description, "(inout Decodable & Codable) -> (Array<Int>)")
     }
     
-    func testSomeOrAnyNormalized() {
+    func testNormalizationSomeOrAny() {
         let typeCompsed: `Type` = "any Decodable & Identifiable"
         let typeGeneric: `Type` = "some Sequence<[String]>"
         
@@ -760,7 +768,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedTypeGeneric.description, "some Sequence<Array<String>>")
     }
     
-    func testSimpleDictionaryNormalized() {
+    func testNormalizationSimpleDictionary() {
         let decl: DeclSyntax = """
             var items: [String: Int]
             """
@@ -780,7 +788,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "Dictionary<String, Int>")
     }
     
-    func testDictionaryWithNestedArrayNormalized() {
+    func testNormalizationDictionaryWithNestedArray() {
         let type: `Type` = "[String: [[Any]]]"
         
         let normalizedType = type.normalized()
@@ -788,7 +796,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "Dictionary<String, Array<Array<Any>>>")
     }
     
-    func testFunctionNormalized() {
+    func testNormalizationFunction() {
         let type: `Type` = "(testParameter: [Int]) -> Void"
         
         let normalizedType = type.normalized()
@@ -796,7 +804,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "(testParameter: Array<Int>) -> ()")
     }
     
-    func testImplicitylUnwrappedOptionalNormalized() {
+    func testNormalizationImplicitylUnwrappedOptional() {
         let type1: `Type` = "MyClass<[String]>!"
         let type2: `Type` = "((inout [String: Int]) -> Void)!"
 
@@ -807,7 +815,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType2.description, "((inout Dictionary<String, Int>) -> ())!")
     }
     
-    func testMemeberWithGenericNormalized() {
+    func testNormalizationMemeberWithGeneric() {
         let type: `Type` = "(inout TestClass.TestMemberStruct<[any Hashable]>) -> ()"
         
         let normalizedType = type.normalized()
@@ -815,7 +823,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "(inout TestClass.TestMemberStruct<Array<any Hashable>>) -> ()")
     }
     
-    func testMetatypeNormalized() {
+    func testNormalizationMetatype() {
         let type: `Type` = "(inout TestClass.Type) -> Void"
         
         let normalizedType = type.normalized()
@@ -823,7 +831,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "(inout TestClass.Type) -> ()")
     }
     
-    func testOptionalNormalized() {
+    func testNormalizationOptional() {
         let type: `Type` = "((inout Int?) -> Void)?"
         
         let normalizedType = type.normalized()
@@ -831,7 +839,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "Optional<((inout Optional<Int>) -> ())>")
     }
     
-    func testPackExpansionNormalized() {
+    func testNormalizationPackExpansion() {
         let type1: `Type` = "(repeat each Elements)"
         let type2: `Type` = "(keyPath: KeyPath<(repeat each Elements), Value>) -> Value"
 
@@ -842,7 +850,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType2.description, "(keyPath: KeyPath<(repeat each Elements), Value>) -> Value")
     }
     
-    func testPackReferenceNormalized() {
+    func testNormalizationPackReference() {
         let type: `Type` = "Tuple<each Elements>"
 
         let normalizedType = type.normalized()
@@ -850,7 +858,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "Tuple<each Elements>")
     }
     
-    func testSimpleNormalized() {
+    func testNormalizationSimple() {
         let type: `Type` = "MyClass<[String]>"
         
         let normalizedType = type.normalized()
@@ -858,7 +866,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "MyClass<Array<String>>")
     }
     
-    func testSuppressed() {
+    func testNormalizationSuppressed() {
         let type: `Type` = "~Copyable"
                 
         let normalizedType = type.normalized()
@@ -866,7 +874,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "~Copyable")
     }
     
-    func testNormalizedAttributedTuple() {
+    func testNormalizationAttributedTuple() {
         let declSyntax: DeclSyntax = """
         let interestingType: (inout [Int], String) -> Float = { _,_ in
             return 3
