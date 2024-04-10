@@ -3,7 +3,7 @@ import SwiftSyntaxBuilder
 
 // TODO: Implement type normalisation and pretend sugar doesn't exist (e.g. Int? looks like Optional<Int> to devs)
 /// Wraps type syntax (e.g. `Result<Success, Failure>`).
-public enum Type: TypeProtocol, SyntaxExpressibleByStringInterpolation {
+public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
     /// An array type (e.g. `[Int]`).
     case array(ArrayType)
     /// A `class` token in a conformance list. Equivalent to `AnyObject`.
