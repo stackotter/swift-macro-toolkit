@@ -319,7 +319,6 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             return .packReference(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
         case .simple(let type):
             if type.name == "Void" {
-                // TODO: Add trivia
                 return .tuple(.init(.init(elements: [])))
             }
             var identifierTypeSyntax: IdentifierTypeSyntax = type._baseSyntax
@@ -379,6 +378,11 @@ extension Type? {
 // MARK: Utilities for normalization
 
 fileprivate extension String {
+    /// Builds a `String` that can then be used for interpolation attaching the attributes and
+    /// the specifiers of the attributed type syntax.
+    /// - Parameter attributedType: The `AttributedTypeSyntax` which `attributes`
+    /// and `specifier` should be used to prefix the string.
+    /// - Returns: A `String` with elements from the attributed type syntax attached to the original `String`.
     func addingAttributes(from attributedType: AttributedTypeSyntax) -> String {
         var updatedString = self
         updatedString = "\(attributedType.attributes)\(self)"
@@ -392,6 +396,9 @@ fileprivate extension String {
 }
 
 fileprivate extension GenericArgumentClauseSyntax {
+    /// Normalize the arguments of the generic.
+    /// - Returns: An updated version of the generic argument clause with
+    /// the arguments types  normalized.
     func normalized() -> Self {
         var genericArgumentClause = self
         let arrayOfGenericArgumentClauseArguments = genericArgumentClause.arguments.map { tupleElement in
