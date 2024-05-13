@@ -47,7 +47,7 @@ public struct AddBlockerMacro: ExpressionMacro {
         of node: some FreestandingMacroExpansionSyntax,
         in context: some MacroExpansionContext
     ) throws -> ExprSyntax {
-        guard let (argument) = destructureSingle(node.argumentList) else {
+        guard let (argument) = destructureSingle(node.arguments) else {
             throw MacroError("#addBlocker only expects one argument")
         }
 

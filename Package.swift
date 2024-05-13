@@ -15,7 +15,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/apple/swift-syntax.git",
-            from: "509.0.0"
+            from: "510.0.0"
         ),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/SwiftPackageIndex/SPIManifest.git", from: "0.12.0"),
@@ -47,7 +47,7 @@ let package = Package(
         .testTarget(
             name: "MacroToolkitTests",
             dependencies: [
-                "MacroToolkitExample",
+                "MacroToolkitExamplePlugin",
                 "MacroToolkit",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),

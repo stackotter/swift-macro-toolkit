@@ -318,7 +318,7 @@ final class MacroToolkitTests: XCTestCase {
             expandedSource: """
 
                 struct Point {
-                    var x: Int = 1 {
+                    var x: Int {
                         get {
                             _storage["x", default: 1] as! Int
                         }
@@ -326,7 +326,7 @@ final class MacroToolkitTests: XCTestCase {
                             _storage["x"] = newValue
                         }
                     }
-                    var y: Int = 2 {
+                    var y: Int {
                         get {
                             _storage["y", default: 2] as! Int
                         }
@@ -562,7 +562,7 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(n.initialValue?._syntax.description, "[1, 2.5]")
         XCTAssertEqual(n.isLazy, true)
     }
-    
+
     func testAsyncInterfaceMacro() throws {
         assertMacroExpansion(
             """
@@ -572,17 +572,17 @@ final class MacroToolkitTests: XCTestCase {
             }
             """,
             expandedSource:
-            """
-            protocol API {
-                func request(completion: (Int) -> Void)
-            
-                func request() async -> Int
-            }
-            """,
+                """
+                protocol API {
+                    func request(completion: (Int) -> Void)
+
+                    func request() async -> Int
+                }
+                """,
             macros: testMacros
         )
     }
-    
+
     func testAsyncInterfaceAllMembersMacro() throws {
         assertMacroExpansion(
             """
@@ -593,16 +593,16 @@ final class MacroToolkitTests: XCTestCase {
             }
             """,
             expandedSource:
-            """
-            protocol API {
-                func request1(completion: (Int) -> Void)
-                func request2(completion: (String) -> Void)
-            
-                func request1() async -> Int
+                """
+                protocol API {
+                    func request1(completion: (Int) -> Void)
+                    func request2(completion: (String) -> Void)
 
-                func request2() async -> String
-            }
-            """,
+                    func request1() async -> Int
+
+                    func request2() async -> String
+                }
+                """,
             macros: testMacros
         )
     }
@@ -617,21 +617,21 @@ final class MacroToolkitTests: XCTestCase {
             }
             """,
             expandedSource:
-            """
-            struct Client {
-                func request1(completion: (Int) -> Void) {
-                    completion(0)
-                }
-            
-                func request1() async -> Int {
-                    await withCheckedContinuation { continuation in
-                        request1() { returnValue in
-                            continuation.resume(returning: returnValue)
+                """
+                struct Client {
+                    func request1(completion: (Int) -> Void) {
+                        completion(0)
+                    }
+
+                    func request1() async -> Int {
+                        await withCheckedContinuation { continuation in
+                            request1() { returnValue in
+                                continuation.resume(returning: returnValue)
+                            }
                         }
                     }
                 }
-            }
-            """,
+                """,
             macros: testMacros
         )
     }
@@ -649,32 +649,32 @@ final class MacroToolkitTests: XCTestCase {
             }
             """,
             expandedSource:
-            """
-            struct Client {
-                func request1(completion: (Int) -> Void) {
-                    completion(0)
-                }
-                func request2(completion: (String) -> Void) {
-                    completion("")
-                }
-            
-                func request1() async -> Int {
-                    await withCheckedContinuation { continuation in
-                        request1() { returnValue in
-                            continuation.resume(returning: returnValue)
-                        }
+                """
+                struct Client {
+                    func request1(completion: (Int) -> Void) {
+                        completion(0)
                     }
-                }
+                    func request2(completion: (String) -> Void) {
+                        completion("")
+                    }
 
-                func request2() async -> String {
-                    await withCheckedContinuation { continuation in
-                        request2() { returnValue in
-                            continuation.resume(returning: returnValue)
+                    func request1() async -> Int {
+                        await withCheckedContinuation { continuation in
+                            request1() { returnValue in
+                                continuation.resume(returning: returnValue)
+                            }
+                        }
+                    }
+
+                    func request2() async -> String {
+                        await withCheckedContinuation { continuation in
+                            request2() { returnValue in
+                                continuation.resume(returning: returnValue)
+                            }
                         }
                     }
                 }
-            }
-            """,
+                """,
             macros: testMacros
         )
     }
