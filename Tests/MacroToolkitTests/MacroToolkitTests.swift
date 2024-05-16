@@ -24,8 +24,8 @@ final class MacroToolkitTests: XCTestCase {
         withMacroTesting(
             macros: testMacros
         ) {
-//            InlineSnapshotTesting.isRecording = true
-//            isRecording: true
+            //            InlineSnapshotTesting.isRecording = true
+            //            isRecording: true
             super.invokeTest()
         }
     }
@@ -99,7 +99,7 @@ final class MacroToolkitTests: XCTestCase {
             enum Colours {
                 case red, gray(darkness: Int)
             }
-            
+
             @CaseDetection
             enum Colours: Int {
                 case red = 1, green = 2
@@ -192,7 +192,7 @@ final class MacroToolkitTests: XCTestCase {
                     case priority
                     case standard
                 }
-            
+
                 static let express: ShippingOptions = [.nextDay, .secondDay]
                 static let all: ShippingOptions = [.express, .priority, .standard]
             }
@@ -286,9 +286,9 @@ final class MacroToolkitTests: XCTestCase {
             struct CustomCodableString: Codable {
                 @CodableKey(name: "OtherName")
                 var propertyWithOtherName: String
-            
+
                 var propertyWithSameName: Bool
-            
+
                 func randomFunction() {}
             }
             """
@@ -382,13 +382,13 @@ final class MacroToolkitTests: XCTestCase {
         let literalWithInterpolation: ExprSyntax = #"""
             "Hi \(name)"
             """#
-        
+
         assertInlineSnapshot(of: StringLiteral(basicLiteral)?.value, as: .description) {
             """
             Hello, world!
             """
         }
-        
+
         assertInlineSnapshot(of: StringLiteral(literalWithEscapeSequences)?.value, as: .dump) {
             #"""
             - "My literal has \t a tab in the middle\n and a random newline ‣ \0 \r \\ \" \'"
@@ -445,7 +445,7 @@ final class MacroToolkitTests: XCTestCase {
 
         // Pretty cursed
         XCTAssert(NilLiteral(nilLiteral)?.value != nil)
-        
+
         assertInlineSnapshot(of: NilLiteral(nilLiteral), as: .description) {
             """
             NilLiteral(_syntax: NilLiteralExprSyntax
