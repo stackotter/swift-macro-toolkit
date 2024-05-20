@@ -1,9 +1,9 @@
+import InlineSnapshotTesting
+import MacroTesting
 import MacroToolkit
 import MacroToolkitExamplePlugin
-import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
-import SwiftSyntaxMacrosTestSupport
 import XCTest
 
 let testMacros: [String: Macro.Type] = [
@@ -20,8 +20,17 @@ let testMacros: [String: Macro.Type] = [
 ]
 
 final class MacroToolkitTests: XCTestCase {
+    override func invokeTest() {
+        withMacroTesting(
+            macros: testMacros
+        ) {
+            isRecording = false
+            super.invokeTest()
+        }
+    }
+
     func testAddAsyncMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             @Before
             @AddAsync
@@ -29,30 +38,30 @@ final class MacroToolkitTests: XCTestCase {
             func d(a: Int, for b: String, _ value: Double, completionBlock: @escaping (Bool) -> Void) {
                 completionBlock(true)
             }
-            """,
-            expandedSource: """
-                @Before
-                @After
-                func d(a: Int, for b: String, _ value: Double, completionBlock: @escaping (Bool) -> Void) {
-                    completionBlock(true)
-                }
+            """
+        } expansion: {
+            """
+            @Before
+            @After
+            func d(a: Int, for b: String, _ value: Double, completionBlock: @escaping (Bool) -> Void) {
+                completionBlock(true)
+            }
 
-                @Before
-                @After
-                func d(a: Int, for b: String, _ value: Double) async -> Bool {
-                    await withCheckedContinuation { continuation in
-                        d(a: a, for: b, value) { returnValue in
-                            continuation.resume(returning: returnValue)
-                        }
+            @Before
+            @After
+            func d(a: Int, for b: String, _ value: Double) async -> Bool {
+                await withCheckedContinuation { continuation in
+                    d(a: a, for: b, value) { returnValue in
+                        continuation.resume(returning: returnValue)
                     }
                 }
-                """,
-            macros: testMacros
-        )
+            }
+            """
+        }
     }
 
     func testAddCompletionHandlerMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             @Before
             @AddCompletionHandler
@@ -60,30 +69,30 @@ final class MacroToolkitTests: XCTestCase {
             func f(a: Int, for b: String, _ value: Double) async -> String {
                 return b
             }
-            """,
-            expandedSource: """
-                @Before
-                @After
-                func f(a: Int, for b: String, _ value: Double) async -> String {
-                    return b
-                }
+            """
+        } expansion: {
+            """
+            @Before
+            @After
+            func f(a: Int, for b: String, _ value: Double) async -> String {
+                return b
+            }
 
-                @Before
-                @After
-                func f(a: Int, for b: String, _ value: Double, completionHandler: @escaping (String) -> Void) {
-                    Task {
-                        completionHandler(
-                            await f(a: a, for: b, value)
-                        )
-                    }
+            @Before
+            @After
+            func f(a: Int, for b: String, _ value: Double, completionHandler: @escaping (String) -> Void) {
+                Task {
+                    completionHandler(
+                        await f(a: a, for: b, value)
+                    )
                 }
-                """,
-            macros: testMacros
-        )
+            }
+            """
+        }
     }
 
     func testCaseDetectionMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             @CaseDetection
             enum Colours {
@@ -95,87 +104,84 @@ final class MacroToolkitTests: XCTestCase {
                 case red = 1, green = 2
                 case blue
             }
-            """,
-            expandedSource: """
+            """
+        } expansion: {
+            """
+            enum Colours {
+                case red, gray(darkness: Int)
 
-                enum Colours {
-                    case red, gray(darkness: Int)
-
-                    var isRed: Bool {
-                        if case .red = self {
-                            return true
-                        }
-
-                        return false
+                var isRed: Bool {
+                    if case .red = self {
+                        return true
                     }
 
-                    var isGray: Bool {
-                        if case .gray = self {
-                            return true
-                        }
-
-                        return false
-                    }
+                    return false
                 }
-                enum Colours: Int {
-                    case red = 1, green = 2
-                    case blue
 
-                    var isRed: Bool {
-                        if case .red = self {
-                            return true
-                        }
-
-                        return false
+                var isGray: Bool {
+                    if case .gray = self {
+                        return true
                     }
 
-                    var isGreen: Bool {
-                        if case .green = self {
-                            return true
-                        }
-
-                        return false
-                    }
-
-                    var isBlue: Bool {
-                        if case .blue = self {
-                            return true
-                        }
-
-                        return false
-                    }
+                    return false
                 }
-                """,
-            macros: testMacros
-        )
+            }
+            enum Colours: Int {
+                case red = 1, green = 2
+                case blue
+
+                var isRed: Bool {
+                    if case .red = self {
+                        return true
+                    }
+
+                    return false
+                }
+
+                var isGreen: Bool {
+                    if case .green = self {
+                        return true
+                    }
+
+                    return false
+                }
+
+                var isBlue: Bool {
+                    if case .blue = self {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            """
+        }
     }
 
     func testAddBlockerMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             #addBlocker(1 + 2 * 3)
-            """,
-            expandedSource: """
-                1 - 2 * 3
-                """,
-            diagnostics: [
-                DiagnosticSpec(
-                    id: MessageID(domain: "ExampleMacros", id: "addBlocker"),
-                    message: "blocked an add; did you mean to subtract?",
-                    line: 1,
-                    column: 15,
-                    severity: .warning,
-                    fixIts: [
-                        FixItSpec(message: "use '-'")
-                    ]
-                )
-            ],
-            macros: testMacros
-        )
+            """
+        } diagnostics: {
+            """
+            #addBlocker(1 + 2 * 3)
+                          ╰─ ⚠️ blocked an add; did you mean to subtract?
+                             ✏️ use '-'
+            """
+        } fixes: {
+            """
+            #addBlocker(1 - 2 * 3)
+            """
+        } expansion: {
+            """
+            1 - 2 * 3
+            """
+        }
     }
 
     func testOptionSetMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             @MyOptionSet<UInt8>
             struct ShippingOptions {
@@ -189,93 +195,91 @@ final class MacroToolkitTests: XCTestCase {
                 static let express: ShippingOptions = [.nextDay, .secondDay]
                 static let all: ShippingOptions = [.express, .priority, .standard]
             }
-            """,
-            expandedSource: """
-
-                struct ShippingOptions {
-                    private enum Options: Int {
-                        case nextDay
-                        case secondDay
-                        case priority
-                        case standard
-                    }
-
-                    static let express: ShippingOptions = [.nextDay, .secondDay]
-                    static let all: ShippingOptions = [.express, .priority, .standard]
-
-                    typealias RawValue = UInt8
-
-                    var rawValue: RawValue
-
-                    init() {
-                        self.rawValue = 0
-                    }
-
-                    init(rawValue: RawValue) {
-                        self.rawValue = rawValue
-                    }
-
-                    static let nextDay: Self =
-                        Self (rawValue: 1 << Options.nextDay.rawValue)
-
-                    static let secondDay: Self =
-                        Self (rawValue: 1 << Options.secondDay.rawValue)
-
-                    static let priority: Self =
-                        Self (rawValue: 1 << Options.priority.rawValue)
-
-                    static let standard: Self =
-                        Self (rawValue: 1 << Options.standard.rawValue)
+            """
+        } expansion: {
+            """
+            struct ShippingOptions {
+                private enum Options: Int {
+                    case nextDay
+                    case secondDay
+                    case priority
+                    case standard
                 }
 
-                extension ShippingOptions: OptionSet {
+                static let express: ShippingOptions = [.nextDay, .secondDay]
+                static let all: ShippingOptions = [.express, .priority, .standard]
+
+                typealias RawValue = UInt8
+
+                var rawValue: RawValue
+
+                init() {
+                    self.rawValue = 0
                 }
-                """,
-            macros: testMacros
-        )
+
+                init(rawValue: RawValue) {
+                    self.rawValue = rawValue
+                }
+
+                static let nextDay: Self =
+                    Self (rawValue: 1 << Options.nextDay.rawValue)
+
+                static let secondDay: Self =
+                    Self (rawValue: 1 << Options.secondDay.rawValue)
+
+                static let priority: Self =
+                    Self (rawValue: 1 << Options.priority.rawValue)
+
+                static let standard: Self =
+                    Self (rawValue: 1 << Options.standard.rawValue)
+            }
+
+            extension ShippingOptions: OptionSet {
+            }
+            """
+        }
     }
 
     func testMetaEnumMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             @MetaEnum
             public enum Color {
                 case red, green, blue
                 case gray(darkness: Float)
             }
-            """,
-            expandedSource: """
+            """
+        } expansion: {
+            """
+            public enum Color {
+                case red, green, blue
+                case gray(darkness: Float)
 
-                public enum Color {
-                    case red, green, blue
-                    case gray(darkness: Float)
-
-                    public enum Meta {
-                        case red
-                        case green
-                        case blue
-                        case gray
-                        public init(_ __macro_local_6parentfMu_: Color) {
-                            switch __macro_local_6parentfMu_ {
-                                case .red:
-                            self = .red
-                        case .green:
-                            self = .green
-                        case .blue:
-                            self = .blue
-                        case .gray:
-                            self = .gray
-                            }
+                public enum Meta {
+                    case red
+                    case green
+                    case blue
+                    case gray
+                    public init(_ __macro_local_6parentfMu_: Color) {
+                        switch __macro_local_6parentfMu_ {
+                            case .red:
+                        self = .red
+                    case .green:
+                        self = .green
+                    case .blue:
+                        self = .blue
+                    case .gray:
+                        self = .gray
                         }
                     }
                 }
-                """,
-            macros: testMacros
-        )
+            }
+            """
+        }
     }
 
     func testCustomCodableMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             @CustomCodable
             struct CustomCodableString: Codable {
@@ -286,60 +290,58 @@ final class MacroToolkitTests: XCTestCase {
 
                 func randomFunction() {}
             }
-            """,
-            expandedSource: """
+            """
+        } expansion: {
+            """
+            struct CustomCodableString: Codable {
+                var propertyWithOtherName: String
 
-                struct CustomCodableString: Codable {
-                    var propertyWithOtherName: String
+                var propertyWithSameName: Bool
 
-                    var propertyWithSameName: Bool
+                func randomFunction() {}
 
-                    func randomFunction() {}
-
-                    enum CodingKeys: String, CodingKey {
-                        case propertyWithOtherName = "OtherName"
-                        case propertyWithSameName
-                    }
+                enum CodingKeys: String, CodingKey {
+                    case propertyWithOtherName = "OtherName"
+                    case propertyWithSameName
                 }
-                """,
-            macros: testMacros
-        )
+            }
+            """
+        }
     }
 
     func testDictionaryStorageMacro() {
-        assertMacroExpansion(
+        assertMacro {
             """
             @DictionaryStorage
             struct Point {
                 var x: Int = 1
                 var y: Int = 2
             }
-            """,
-            expandedSource: """
-
-                struct Point {
-                    var x: Int {
-                        get {
-                            _storage["x", default: 1] as! Int
-                        }
-                        set {
-                            _storage["x"] = newValue
-                        }
+            """
+        } expansion: {
+            """
+            struct Point {
+                var x: Int {
+                    get {
+                        _storage["x", default: 1] as! Int
                     }
-                    var y: Int {
-                        get {
-                            _storage["y", default: 2] as! Int
-                        }
-                        set {
-                            _storage["y"] = newValue
-                        }
+                    set {
+                        _storage["x"] = newValue
                     }
-
-                    var _storage: [String: Any] = [:]
                 }
-                """,
-            macros: testMacros
-        )
+                var y: Int {
+                    get {
+                        _storage["y", default: 2] as! Int
+                    }
+                    set {
+                        _storage["y"] = newValue
+                    }
+                }
+
+                var _storage: [String: Any] = [:]
+            }
+            """
+        }
     }
 
     func testNumericLiteralParsing() {
@@ -380,11 +382,19 @@ final class MacroToolkitTests: XCTestCase {
             "Hi \(name)"
             """#
 
-        XCTAssertEqual(StringLiteral(basicLiteral)?.value, "Hello, world!")
-        XCTAssertEqual(
-            StringLiteral(literalWithEscapeSequences)?.value,
-            "My literal has \t a tab in the middle\n and a random newline \u{2023} \0 \r \\ \" \'"
-        )
+        assertInlineSnapshot(of: StringLiteral(basicLiteral)?.value, as: .description) {
+            """
+            Hello, world!
+            """
+        }
+
+        assertInlineSnapshot(of: StringLiteral(literalWithEscapeSequences)?.value, as: .dump) {
+            #"""
+            - "My literal has \t a tab in the middle\n and a random newline ‣ \0 \r \\ \" \'"
+
+            """#
+        }
+
         XCTAssertEqual(
             StringLiteral(rawLiteral)?.value,
             ##"Hi \(name) \n \t \#t \##t \#(test)"##
@@ -564,50 +574,48 @@ final class MacroToolkitTests: XCTestCase {
     }
 
     func testAsyncInterfaceMacro() throws {
-        assertMacroExpansion(
+        assertMacro {
             """
             protocol API {
                 @AddAsync
                 func request(completion: (Int) -> Void)
             }
-            """,
-            expandedSource:
-                """
-                protocol API {
-                    func request(completion: (Int) -> Void)
+            """
+        } expansion: {
+            """
+            protocol API {
+                func request(completion: (Int) -> Void)
 
-                    func request() async -> Int
-                }
-                """,
-            macros: testMacros
-        )
+                func request() async -> Int
+            }
+            """
+        }
     }
 
     func testAsyncInterfaceAllMembersMacro() throws {
-        assertMacroExpansion(
+        assertMacro {
             """
             @AddAsyncAllMembers
             protocol API {
                 func request1(completion: (Int) -> Void)
                 func request2(completion: (String) -> Void)
             }
-            """,
-            expandedSource:
-                """
-                protocol API {
-                    func request1(completion: (Int) -> Void)
-                    func request2(completion: (String) -> Void)
+            """
+        } expansion: {
+            """
+            protocol API {
+                func request1(completion: (Int) -> Void)
+                func request2(completion: (String) -> Void)
 
-                    func request1() async -> Int
+                func request1() async -> Int
 
-                    func request2() async -> String
-                }
-                """,
-            macros: testMacros
-        )
+                func request2() async -> String
+            }
+            """
+        }
     }
     func testAsyncImplementationMacro() throws {
-        assertMacroExpansion(
+        assertMacro {
             """
             struct Client {
                 @AddAsync
@@ -615,28 +623,27 @@ final class MacroToolkitTests: XCTestCase {
                     completion(0)
                 }
             }
-            """,
-            expandedSource:
-                """
-                struct Client {
-                    func request1(completion: (Int) -> Void) {
-                        completion(0)
-                    }
+            """
+        } expansion: {
+            """
+            struct Client {
+                func request1(completion: (Int) -> Void) {
+                    completion(0)
+                }
 
-                    func request1() async -> Int {
-                        await withCheckedContinuation { continuation in
-                            request1() { returnValue in
-                                continuation.resume(returning: returnValue)
-                            }
+                func request1() async -> Int {
+                    await withCheckedContinuation { continuation in
+                        request1() { returnValue in
+                            continuation.resume(returning: returnValue)
                         }
                     }
                 }
-                """,
-            macros: testMacros
-        )
+            }
+            """
+        }
     }
     func testAsyncImplementationAllMembersMacro() throws {
-        assertMacroExpansion(
+        assertMacro {
             """
             @AddAsyncAllMembers
             struct Client {
@@ -647,35 +654,34 @@ final class MacroToolkitTests: XCTestCase {
                     completion("")
                 }
             }
-            """,
-            expandedSource:
-                """
-                struct Client {
-                    func request1(completion: (Int) -> Void) {
-                        completion(0)
-                    }
-                    func request2(completion: (String) -> Void) {
-                        completion("")
-                    }
+            """
+        } expansion: {
+            """
+            struct Client {
+                func request1(completion: (Int) -> Void) {
+                    completion(0)
+                }
+                func request2(completion: (String) -> Void) {
+                    completion("")
+                }
 
-                    func request1() async -> Int {
-                        await withCheckedContinuation { continuation in
-                            request1() { returnValue in
-                                continuation.resume(returning: returnValue)
-                            }
-                        }
-                    }
-
-                    func request2() async -> String {
-                        await withCheckedContinuation { continuation in
-                            request2() { returnValue in
-                                continuation.resume(returning: returnValue)
-                            }
+                func request1() async -> Int {
+                    await withCheckedContinuation { continuation in
+                        request1() { returnValue in
+                            continuation.resume(returning: returnValue)
                         }
                     }
                 }
-                """,
-            macros: testMacros
-        )
+
+                func request2() async -> String {
+                    await withCheckedContinuation { continuation in
+                        request2() { returnValue in
+                            continuation.resume(returning: returnValue)
+                        }
+                    }
+                }
+            }
+            """
+        }
     }
 }
