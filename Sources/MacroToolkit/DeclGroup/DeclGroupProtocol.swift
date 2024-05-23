@@ -19,6 +19,9 @@ public protocol DeclGroupProtocol: RawRepresentable {
     /// The properties declared in the declaration group.
     var properties: [Property] { get }
 
+    /// The inherited types of the declaration group.
+    var inheritedTypes: [Type] { get }
+
     /// Initializes the declaration group with the given syntax node.
     ///
     /// - Parameter syntax: The underlying syntax node representing the declaration group.

@@ -60,4 +60,7 @@ public enum DeclGroup: DeclGroupProtocol {
 
     /// The properties declared in the declaration group.
     public var properties: [Property] { wrapped.properties }
+
+    /// The types inherited in the declaration group.
+    public var inheritedTypes: [Type] { wrapped.inheritedTypes }
 }
