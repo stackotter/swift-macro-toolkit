@@ -1,7 +1,7 @@
 import SwiftSyntax
 
 /// Represents access control levels in Swift (e.g., private, public).
-public enum AccessModifier: RawRepresentable, Modifier, Comparable {
+public enum AccessModifier: RawRepresentable, ModifierProtocol, Comparable {
     case `private`
     case `fileprivate`
     case `internal`

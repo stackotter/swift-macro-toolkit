@@ -3,7 +3,7 @@ import SwiftSyntax
 /// Wraps an `actor` declaration.
 public struct Actor: DeclGroupProtocol {
     /// The underlying syntax node for the `actor` declaration.
-    public var rawValue: ActorDeclSyntax
+    public var _syntax: ActorDeclSyntax
 
     /// The identifier (name) of the `actor`.
     public var identifier: String {
@@ -14,6 +14,6 @@ public struct Actor: DeclGroupProtocol {
     ///
     /// - Parameter syntax: The syntax node representing the `actor` declaration.
     public init(_ syntax: ActorDeclSyntax) {
-        rawValue = syntax
+        _syntax = syntax
     }
 }

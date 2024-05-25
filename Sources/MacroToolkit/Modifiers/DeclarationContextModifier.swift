@@ -1,7 +1,7 @@
 import SwiftSyntax
 
 /// Represents context-specific modifiers for declarations (e.g., static, class).
-public enum DeclarationContextModifier: RawRepresentable, Modifier {
+public enum DeclarationContextModifier: RawRepresentable, ModifierProtocol {
     case `static`
     case `class`
 

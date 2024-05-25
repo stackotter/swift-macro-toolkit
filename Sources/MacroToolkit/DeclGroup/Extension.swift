@@ -3,7 +3,7 @@ import SwiftSyntax
 /// Wraps an `extension` declaration.
 public struct Extension: DeclGroupProtocol {
     /// The underlying syntax node for the `extension` declaration.
-    public var rawValue: ExtensionDeclSyntax
+    public var _syntax: ExtensionDeclSyntax
 
     /// The identifier (extended type) of the `extension`.
     public var identifier: String {
@@ -14,6 +14,6 @@ public struct Extension: DeclGroupProtocol {
     ///
     /// - Parameter syntax: The syntax node representing the `extension` declaration.
     public init(_ syntax: ExtensionDeclSyntax) {
-        rawValue = syntax
+        _syntax = syntax
     }
 }

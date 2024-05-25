@@ -9,7 +9,7 @@ public struct CustomCodableMacro: MemberMacro {
         providingMembersOf declaration: some DeclGroupSyntax,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        let decl = DeclGroup(declaration)
+        let decl = AnyDeclGroup(declaration)
 
         let cases = decl.members.compactMap(\.asVariable).compactMap { (variable) -> String? in
             guard let propertyName = destructureSingle(variable.identifiers) else {

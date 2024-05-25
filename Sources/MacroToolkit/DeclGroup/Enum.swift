@@ -2,8 +2,9 @@ import SwiftSyntax
 
 /// Wraps an `enum` declaration.
 public struct Enum: DeclGroupProtocol {
+
     /// The underlying syntax node for the `enum` declaration.
-    public var rawValue: EnumDeclSyntax
+    public var _syntax: EnumDeclSyntax
 
     /// The identifier (name) of the `enum`.
     public var identifier: String {
@@ -14,7 +15,7 @@ public struct Enum: DeclGroupProtocol {
     ///
     /// - Parameter syntax: The syntax node representing the `enum` declaration.
     public init(_ syntax: EnumDeclSyntax) {
-        rawValue = syntax
+        _syntax = syntax
     }
 
     /// The `enum`'s cases.

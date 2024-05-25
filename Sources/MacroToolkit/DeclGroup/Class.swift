@@ -3,7 +3,7 @@ import SwiftSyntax
 /// Wraps a `class` declaration.
 public struct Class: DeclGroupProtocol {
     /// The underlying syntax node for the `class` declaration.
-    public var rawValue: ClassDeclSyntax
+    public var _syntax: ClassDeclSyntax
 
     /// The identifier (name) of the `class`.
     public var identifier: String {
@@ -14,6 +14,6 @@ public struct Class: DeclGroupProtocol {
     ///
     /// - Parameter syntax: The syntax node representing the `class` declaration.
     public init(_ syntax: ClassDeclSyntax) {
-        rawValue = syntax
+        _syntax = syntax
     }
 }
