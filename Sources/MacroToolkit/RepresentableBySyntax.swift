@@ -17,5 +17,3 @@ public protocol RepresentableBySyntax {
     /// - Parameter syntax: The underlying syntax node to represent.
     init(_ syntax: UnderlyingSyntax)
 }
-
-

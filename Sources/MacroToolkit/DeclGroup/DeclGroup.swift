@@ -9,20 +9,20 @@ public enum DeclGroup: DeclGroupProtocol {
     case `class`(Class)
     case `actor`(Actor)
     case `extension`(Extension)
-    
+
     /// A private computed property that returns the wrapped `DeclGroupProtocol` instance.
     ///
     /// This property is used internally to access the underlying implementation of the declaration group.
     private var wrapped: any DeclGroupProtocol {
-    switch self {
-    case .struct(let wrapped): return wrapped
-    case .enum(let wrapped): return wrapped
-    case .class(let wrapped): return wrapped
-    case .actor(let wrapped): return wrapped
-    case .extension(let wrapped): return wrapped
+        switch self {
+            case .struct(let wrapped): return wrapped
+            case .enum(let wrapped): return wrapped
+            case .class(let wrapped): return wrapped
+            case .actor(let wrapped): return wrapped
+            case .extension(let wrapped): return wrapped
+        }
     }
-    }
-    
+
     /// Initializes a `DeclGroup` instance from a `DeclGroupSyntax`.
     ///
     /// - Parameter syntax: The syntax node representing the declaration group.
@@ -42,16 +42,16 @@ public enum DeclGroup: DeclGroupProtocol {
             fatalError("Unhandled decl group type '\(type(of: syntax))'")
         }
     }
-    
+
     /// The identifier of the declaration group.
     public var identifier: String { wrapped.identifier }
-    
+
     /// All members declared within the declaration group.
     public var members: [Decl] { wrapped.members }
-    
+
     /// All properties declared within the declaration group.
     public var properties: [Property] { wrapped.properties }
-    
+
     /// All types that the declaration group inherits from or conforms to.
     public var inheritedTypes: [Type] { wrapped.inheritedTypes }
 }

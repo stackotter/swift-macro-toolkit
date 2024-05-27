@@ -5,13 +5,13 @@ import SwiftSyntax
 public protocol DeclGroupProtocol {
     /// The identifier of the declaration group.
     var identifier: String { get }
-    
+
     /// All members declared within the declaration group.
     var members: [Decl] { get }
-    
+
     /// All properties declared within the declaration group.
     var properties: [Property] { get }
-    
+
     /// All types that the declaration group inherits from or conforms to.
     var inheritedTypes: [Type] { get }
 }
@@ -25,11 +25,11 @@ extension DeclGroupProtocol where UnderlyingSyntax: DeclGroupSyntax, Self: Repre
         guard let syntax = syntax as? UnderlyingSyntax else { return nil }
         self.init(syntax)
     }
-    
+
     public var members: [Decl] {
         _syntax.memberBlock.members.map(\.decl).map(Decl.init)
     }
-    
+
     public var properties: [Property] {
         members.compactMap(\.asVariable).flatMap { variable in
             var bindings = variable._syntax.bindings.flatMap { binding in
@@ -49,15 +49,15 @@ extension DeclGroupProtocol where UnderlyingSyntax: DeclGroupSyntax, Self: Repre
             return bindings
         }
     }
-    
+
     public var inheritedTypes: [Type] {
         _syntax.inheritanceClause?.inheritedTypes.map(\.type).map(Type.init) ?? []
     }
-    
+
     public var accessLevel: AccessModifier? {
         AccessModifier(firstModifierOfKindIn: _syntax.modifiers)
     }
-    
+
     public var declarationContext: DeclarationContextModifier? {
         DeclarationContextModifier(firstModifierOfKindIn: _syntax.modifiers)
     }

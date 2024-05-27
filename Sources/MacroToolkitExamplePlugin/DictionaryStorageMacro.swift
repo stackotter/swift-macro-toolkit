@@ -1,6 +1,6 @@
+import MacroToolkit
 import SwiftSyntax
 import SwiftSyntaxMacros
-import MacroToolkit
 
 public struct DictionaryStorageMacro {}
 
