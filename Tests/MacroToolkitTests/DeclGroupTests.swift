@@ -68,7 +68,7 @@ final class DeclGroupTests: XCTestCase {
             struct TestStruct { var value: Int }
             """
         let structSyntax = structDecl.as(StructDeclSyntax.self)!
-        let structDeclGroup = AnyDeclGroup(structSyntax)
+        let structDeclGroup = DeclGroup(structSyntax)
 
         switch structDeclGroup {
             case .struct(let testStruct):
@@ -83,7 +83,7 @@ final class DeclGroupTests: XCTestCase {
             enum TestEnum { case caseOne, caseTwo }
             """
         let enumSyntax = enumDecl.as(EnumDeclSyntax.self)!
-        let enumDeclGroup = AnyDeclGroup(enumSyntax)
+        let enumDeclGroup = DeclGroup(enumSyntax)
 
         switch enumDeclGroup {
             case .enum(let testEnum):
@@ -98,7 +98,7 @@ final class DeclGroupTests: XCTestCase {
             class TestClass { var value: Int }
             """
         let classSyntax = classDecl.as(ClassDeclSyntax.self)!
-        let classDeclGroup = AnyDeclGroup(classSyntax)
+        let classDeclGroup = DeclGroup(classSyntax)
 
         switch classDeclGroup {
             case .class(let testClass):
@@ -113,7 +113,7 @@ final class DeclGroupTests: XCTestCase {
             actor TestActor { var value: Int }
             """
         let actorSyntax = actorDecl.as(ActorDeclSyntax.self)!
-        let actorDeclGroup = AnyDeclGroup(actorSyntax)
+        let actorDeclGroup = DeclGroup(actorSyntax)
 
         switch actorDeclGroup {
             case .actor(let testActor):
@@ -128,7 +128,7 @@ final class DeclGroupTests: XCTestCase {
             extension TestStruct { func testMethod() {} }
             """
         let extensionSyntax = extensionDecl.as(ExtensionDeclSyntax.self)!
-        let extensionDeclGroup = AnyDeclGroup(extensionSyntax)
+        let extensionDeclGroup = DeclGroup(extensionSyntax)
 
         switch extensionDeclGroup {
             case .extension(let testExtension):

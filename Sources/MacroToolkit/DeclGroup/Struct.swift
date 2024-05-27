@@ -1,7 +1,7 @@
 import SwiftSyntax
 
 /// Wraps a `struct` declaration.
-public struct Struct: DeclGroupProtocol {
+public struct Struct: DeclGroupProtocol, RepresentableBySyntax {
     /// The underlying syntax node for the `struct` declaration.
     public var _syntax: StructDeclSyntax
 

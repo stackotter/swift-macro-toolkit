@@ -10,10 +10,12 @@ public protocol RepresentableBySyntax {
     associatedtype UnderlyingSyntax: SyntaxProtocol
 
     /// The underlying syntax node for this type.
-    var _syntax: UnderlyingSyntax { get set }
+    var _syntax: UnderlyingSyntax { get }
 
     /// Initializes an instance with the given underlying syntax node.
     ///
     /// - Parameter syntax: The underlying syntax node to represent.
     init(_ syntax: UnderlyingSyntax)
 }
+
+

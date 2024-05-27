@@ -1,7 +1,7 @@
 import SwiftSyntax
 
 /// Wraps an `extension` declaration.
-public struct Extension: DeclGroupProtocol {
+public struct Extension: DeclGroupProtocol, RepresentableBySyntax {
     /// The underlying syntax node for the `extension` declaration.
     public var _syntax: ExtensionDeclSyntax
 

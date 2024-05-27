@@ -1,7 +1,7 @@
 import SwiftSyntax
 
 /// Wraps a `class` declaration.
-public struct Class: DeclGroupProtocol {
+public struct Class: DeclGroupProtocol, RepresentableBySyntax {
     /// The underlying syntax node for the `class` declaration.
     public var _syntax: ClassDeclSyntax
 

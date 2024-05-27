@@ -1,8 +1,7 @@
 import SwiftSyntax
 
 /// Wraps an `enum` declaration.
-public struct Enum: DeclGroupProtocol {
-
+public struct Enum: DeclGroupProtocol, RepresentableBySyntax {
     /// The underlying syntax node for the `enum` declaration.
     public var _syntax: EnumDeclSyntax
 
