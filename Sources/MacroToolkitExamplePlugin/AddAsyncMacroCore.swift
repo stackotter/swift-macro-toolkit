@@ -6,7 +6,8 @@ import SwiftSyntaxMacros
 
 enum AddAsyncMacroCore {
     static func expansion(
-        of node: AttributeSyntax?, providingFunctionOf declaration: some DeclSyntaxProtocol
+        of node: AttributeSyntax?,
+        providingFunctionOf declaration: some DeclSyntaxProtocol
     ) throws -> DeclSyntax {
         // Only on functions at the moment.
         guard let function = Function(declaration) else {
