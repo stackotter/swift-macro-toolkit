@@ -39,46 +39,48 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
     case tuple(TupleType)
 
     public var _baseSyntax: TypeSyntax {
-        let type: any TypeProtocol = switch self {
-            case .array(let type): type
-            case .classRestriction(let type): type
-            case .composition(let type): type
-            case .someOrAny(let type): type
-            case .dictionary(let type): type
-            case .function(let type): type
-            case .implicitlyUnwrappedOptional(let type): type
-            case .member(let type): type
-            case .metatype(let type): type
-            case .missing(let type): type
-            case .optional(let type): type
-            case .packExpansion(let type): type
-            case .packReference(let type): type
-            case .simple(let type): type
-            case .suppressed(let type): type
-            case .tuple(let type): type
-        }
+        let type: any TypeProtocol =
+            switch self {
+                case .array(let type): type
+                case .classRestriction(let type): type
+                case .composition(let type): type
+                case .someOrAny(let type): type
+                case .dictionary(let type): type
+                case .function(let type): type
+                case .implicitlyUnwrappedOptional(let type): type
+                case .member(let type): type
+                case .metatype(let type): type
+                case .missing(let type): type
+                case .optional(let type): type
+                case .packExpansion(let type): type
+                case .packReference(let type): type
+                case .simple(let type): type
+                case .suppressed(let type): type
+                case .tuple(let type): type
+            }
         return TypeSyntax(type._baseSyntax)
     }
 
     public var _attributedSyntax: AttributedTypeSyntax? {
-        let type: any TypeProtocol = switch self {
-            case .array(let type): type
-            case .classRestriction(let type): type
-            case .composition(let type): type
-            case .someOrAny(let type): type
-            case .dictionary(let type): type
-            case .function(let type): type
-            case .implicitlyUnwrappedOptional(let type): type
-            case .member(let type): type
-            case .metatype(let type): type
-            case .missing(let type): type
-            case .optional(let type): type
-            case .packExpansion(let type): type
-            case .packReference(let type): type
-            case .simple(let type): type
-            case .suppressed(let type): type
-            case .tuple(let type): type
-        }
+        let type: any TypeProtocol =
+            switch self {
+                case .array(let type): type
+                case .classRestriction(let type): type
+                case .composition(let type): type
+                case .someOrAny(let type): type
+                case .dictionary(let type): type
+                case .function(let type): type
+                case .implicitlyUnwrappedOptional(let type): type
+                case .member(let type): type
+                case .metatype(let type): type
+                case .missing(let type): type
+                case .optional(let type): type
+                case .packExpansion(let type): type
+                case .packReference(let type): type
+                case .simple(let type): type
+                case .suppressed(let type): type
+                case .tuple(let type): type
+            }
         return type._attributedSyntax
     }
 

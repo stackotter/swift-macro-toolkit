@@ -22,7 +22,7 @@ public struct MetaEnumMacro {
 
         parentTypeName = enumDecl.identifier
 
-        access = enumDecl.isPublic ? "public " : ""
+        access = enumDecl.accessLevel == .public ? "public " : ""
 
         metaCases = enumDecl.cases.map { case_ in
             case_.withoutValue()
@@ -90,7 +90,11 @@ enum CaseMacroDiagnostic {
     func diagnose(at node: Syntax) -> Diagnostic {
         DiagnosticBuilder(for: node)
             .message(message)
-            .messageID(MessageID(domain: "MetaEnum", id: Mirror(reflecting: self).children.first?.label ?? "\(self)"))
+            .messageID(
+                MessageID(
+                    domain: "MetaEnum",
+                    id: Mirror(reflecting: self).children.first?.label ?? "\(self)")
+            )
             .build()
     }
 }

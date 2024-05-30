@@ -1,11 +1,14 @@
-import SwiftSyntax
 import MacroToolkit
+import SwiftSyntax
 import SwiftSyntaxMacros
 
 // Modified from: https://github.com/DougGregor/swift-macro-examples/blob/f61ac7cdca8dc3557e53f86e7e03df1353908d3e/MacroExamplesPlugin/AddAsyncMacro.swift
 
 enum AddAsyncMacroCore {
-    static func expansion(of node: AttributeSyntax?, providingFunctionOf declaration: some DeclSyntaxProtocol) throws -> DeclSyntax {
+    static func expansion(
+        of node: AttributeSyntax?,
+        providingFunctionOf declaration: some DeclSyntaxProtocol
+    ) throws -> DeclSyntax {
         // Only on functions at the moment.
         guard let function = Function(declaration) else {
             throw MacroError("@AddAsync only works on functions")
@@ -65,28 +68,28 @@ enum AddAsyncMacroCore {
 
         let newBody = function._syntax.body.map { _ in
             let switchBody: ExprSyntax =
-            """
-            switch returnValue {
-                case .success(let value):
-                    continuation.resume(returning: value)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-            }
-            """
-            
-            let continuationExpr =
-            isResultReturn
-            ? "try await withCheckedThrowingContinuation { continuation in"
-            : "await withCheckedContinuation { continuation in"
-            
-            let newBody: ExprSyntax =
-            """
-            \(raw: continuationExpr)
-                \(raw: function.identifier)(\(raw: callArguments.joined(separator: ", "))) { returnValue in
-                    \(isResultReturn ? switchBody : "continuation.resume(returning: returnValue)")
+                """
+                switch returnValue {
+                    case .success(let value):
+                        continuation.resume(returning: value)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
                 }
-            }
-            """
+                """
+
+            let continuationExpr =
+                isResultReturn
+                ? "try await withCheckedThrowingContinuation { continuation in"
+                : "await withCheckedContinuation { continuation in"
+
+            let newBody: ExprSyntax =
+                """
+                \(raw: continuationExpr)
+                    \(raw: function.identifier)(\(raw: callArguments.joined(separator: ", "))) { returnValue in
+                        \(isResultReturn ? switchBody : "continuation.resume(returning: returnValue)")
+                    }
+                }
+                """
             return CodeBlockSyntax([newBody])
         }
         // TODO: Make better codeblock init

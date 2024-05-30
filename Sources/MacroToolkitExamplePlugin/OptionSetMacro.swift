@@ -149,8 +149,7 @@ extension OptionSetMacro: MemberMacro {
 
         let cases = optionsEnum.cases
 
-        // TODO: This seems wrong, surely other modifiers would also make sense to passthrough?
-        let access = structDecl.isPublic ? "public " : ""
+        let access = structDecl.accessLevel.map { "\($0) " } ?? ""
 
         let staticVars = cases.map { (case_) -> DeclSyntax in
             """
