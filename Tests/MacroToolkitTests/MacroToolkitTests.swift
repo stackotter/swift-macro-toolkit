@@ -879,7 +879,7 @@ final class MacroToolkitTests: XCTestCase {
     
     func testNormalizationAttributedTuple() {
         let declSyntax: DeclSyntax = """
-        let interestingType: (inout [Int], String) -> Float = { _,_ in
+        let interestingType: (inout [Int], String) -> Float = { _, _ in
             return 3
         }
         """

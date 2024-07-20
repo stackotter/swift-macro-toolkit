@@ -293,7 +293,7 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             return .missing(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
         case .optional(let type):
             let optionalTypeSyntax: OptionalTypeSyntax = type._baseSyntax
-            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            let attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
             let normalizedElement = Type(optionalTypeSyntax.wrappedType).normalized()
             
             let identifierSyntax = IdentifierTypeSyntax(
