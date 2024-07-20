@@ -345,8 +345,11 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
         case .tuple(let type):
             if type.elements.count == 1 {
                 let child = type.elements[0]
-                if case .tuple(_) = child {
+                switch child {
+                case .tuple, .simple:
                     return child.normalized()
+                default:
+                    break
                 }
             }
             

@@ -717,6 +717,19 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(normalizedType.description, "(Optional<()>)")
     }
     
+    func testNormalizationTuple() {        
+        let type1: `Type` = "(Optional<()>)"
+        let type2: `Type` = "((Int) -> (Int)) -> String"
+        
+        let normalizedType1 = type1.normalized()
+        let normalizedType2 = type2.normalized()
+
+        XCTAssertEqual(normalizedType1.description, "Optional<()>")
+        XCTAssertEqual(normalizedType2.description, "((Int) -> Int) -> String")
+        XCTAssertEqual(normalizedType1.description, "\(((Optional<()>)).self)")
+        XCTAssertEqual(normalizedType2.description, "\((((Int) -> (Int)) -> String).self)")
+    }
+    
     func testNormalizationNestedArrays() {
         let type: `Type` = "[[Int]]"
         
