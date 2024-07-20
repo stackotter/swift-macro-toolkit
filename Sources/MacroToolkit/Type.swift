@@ -292,26 +292,25 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
         case .missing(let type):
             return .missing(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
         case .optional(let type):
-            var optionalTypeSyntax: OptionalTypeSyntax = type._baseSyntax
+            let optionalTypeSyntax: OptionalTypeSyntax = type._baseSyntax
             var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
             let normalizedElement = Type(optionalTypeSyntax.wrappedType).normalized()
-            optionalTypeSyntax.wrappedType = TypeSyntax(normalizedElement._syntax)
-            attributedTypeSyntax?.baseType = TypeSyntax(optionalTypeSyntax)
             
-//            let identifierSyntax = IdentifierTypeSyntax(
-//                leadingTrivia: optionalTypeSyntax.leadingTrivia,
-//                name: .identifier("Optional"),
-//                genericArgumentClause: .init(
-//                    arguments: .init(arrayLiteral: .init(argument: optionalTypeSyntax.wrappedType))
-//                ),
-//                trailingTrivia: optionalTypeSyntax.leadingTrivia
-//            )
-            
-            var base = "Optional<\(optionalTypeSyntax.wrappedType)>"
+            let identifierSyntax = IdentifierTypeSyntax(
+                leadingTrivia: optionalTypeSyntax.leadingTrivia,
+                name: .identifier("Optional"),
+                genericArgumentClause: .init(
+                    arguments: .init(arrayLiteral: .init(argument: TypeSyntax(normalizedElement._syntax)))
+                ),
+                trailingTrivia: optionalTypeSyntax.leadingTrivia
+            )
+
             if let attributedTypeSyntax {
-                base = base.addingAttributes(from: attributedTypeSyntax)
+                let normalizedAttributedTypeSyntax = identifierSyntax.addingAttributes(from: attributedTypeSyntax)
+                return .simple(.init(identifierSyntax, attributedSyntax: normalizedAttributedTypeSyntax))
+            } else {
+                return .simple(.init(identifierSyntax))
             }
-            return NormalizedType(stringLiteral: base)
         case .packExpansion(let type):
             // Looks like there can only be simple identifiers in pack expansions, with no generics, and therefore we
             // don't ned to recursively normalize
@@ -397,6 +396,23 @@ fileprivate extension String {
         }
         
         return updatedString
+    }
+}
+
+fileprivate extension TypeSyntaxProtocol {
+    /// Builds a `AttributedTypeSyntax` attaching the attributes and
+    /// the specifiers of the attributed type syntax.
+    /// - Parameter attributedType: The `AttributedTypeSyntax` which `attributes`
+    /// and `specifier` should be attached to the `TypeSyntax`.
+    /// - Returns: A `AttributedTypeSyntax` with elements from the attributed type syntax attached to the original `TypeSyntax`.
+    func addingAttributes(from attributedType: AttributedTypeSyntax) -> AttributedTypeSyntax {
+        return AttributedTypeSyntax(
+            leadingTrivia: attributedType.leadingTrivia,
+            specifier: attributedType.specifier,
+            attributes: attributedType.attributes,
+            baseType: self,
+            trailingTrivia: attributedType.trailingTrivia
+        )
     }
 }
 
