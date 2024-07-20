@@ -194,10 +194,21 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             
             return normalizedType
         case .composition(let type):
-            // Looks like there can only be simple types in composition, with no generics, and therefore we
-            // don't ned to recursively normalize
+            var compositionTypeSyntax: CompositionTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
             
-            return .composition(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
+            let arrayOfCompositionElements = compositionTypeSyntax.elements.map { compositionElement in
+                let normalizedType = Type(compositionElement.type).normalized()
+                let updatedElementType = TypeSyntax(normalizedType._syntax)
+                var newCompositionElement = compositionElement
+                newCompositionElement.type = updatedElementType
+                return newCompositionElement
+            }
+            
+            compositionTypeSyntax.elements = .init(arrayOfCompositionElements)
+            attributedTypeSyntax?.baseType = TypeSyntax(compositionTypeSyntax)
+            
+            return .composition(.init(compositionTypeSyntax, attributedSyntax: attributedTypeSyntax))
         case .someOrAny(let type):
             var someOrAnyTypeSyntax: SomeOrAnyTypeSyntax = type._baseSyntax
             var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
