@@ -29,16 +29,16 @@ public enum NormalizedType: TypeProtocol, SyntaxExpressibleByStringInterpolation
     public var _baseSyntax: TypeSyntax {
         let type: any TypeProtocol = switch self {
         case .composition(let type as any TypeProtocol),
-                .someOrAny(let type as any TypeProtocol),
-                .function(let type as any TypeProtocol),
-                .implicitlyUnwrappedOptional(let type as any TypeProtocol),
-                .member(let type as any TypeProtocol),
-                .missing(let type as any TypeProtocol),
-                .packExpansion(let type as any TypeProtocol),
-                .packReference(let type as any TypeProtocol),
-                .simple(let type as any TypeProtocol),
-                .suppressed(let type as any TypeProtocol),
-                .tuple(let type as any TypeProtocol):
+                    .someOrAny(let type as any TypeProtocol),
+                    .function(let type as any TypeProtocol),
+                    .implicitlyUnwrappedOptional(let type as any TypeProtocol),
+                    .member(let type as any TypeProtocol),
+                    .missing(let type as any TypeProtocol),
+                    .packExpansion(let type as any TypeProtocol),
+                    .packReference(let type as any TypeProtocol),
+                    .simple(let type as any TypeProtocol),
+                    .suppressed(let type as any TypeProtocol),
+                    .tuple(let type as any TypeProtocol):
             type
         }
         return TypeSyntax(type._baseSyntax)
@@ -47,16 +47,16 @@ public enum NormalizedType: TypeProtocol, SyntaxExpressibleByStringInterpolation
     public var _attributedSyntax: AttributedTypeSyntax? {
         let type: any TypeProtocol = switch self {
         case .composition(let type as any TypeProtocol),
-                .someOrAny(let type as any TypeProtocol),
-                .function(let type as any TypeProtocol),
-                .implicitlyUnwrappedOptional(let type as any TypeProtocol),
-                .member(let type as any TypeProtocol),
-                .missing(let type as any TypeProtocol),
-                .packExpansion(let type as any TypeProtocol),
-                .packReference(let type as any TypeProtocol),
-                .simple(let type as any TypeProtocol),
-                .suppressed(let type as any TypeProtocol),
-                .tuple(let type as any TypeProtocol):
+                    .someOrAny(let type as any TypeProtocol),
+                    .function(let type as any TypeProtocol),
+                    .implicitlyUnwrappedOptional(let type as any TypeProtocol),
+                    .member(let type as any TypeProtocol),
+                    .missing(let type as any TypeProtocol),
+                    .packExpansion(let type as any TypeProtocol),
+                    .packReference(let type as any TypeProtocol),
+                    .simple(let type as any TypeProtocol),
+                    .suppressed(let type as any TypeProtocol),
+                    .tuple(let type as any TypeProtocol):
             type
         }
         return type._attributedSyntax

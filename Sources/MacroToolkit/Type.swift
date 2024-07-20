@@ -135,7 +135,7 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
 
     /// A normalized description of the type (e.g. for `()` this would be `Void`).
     public var normalizedDescription: String {
-        self.normalized()._syntax.withoutTrivia().description
+        normalized()._syntax.withoutTrivia().description
     }
 
     /// Gets whether the type is a void type (i.e. `Void`, `()`, `(Void)`, `((((()))))`, etc.).
@@ -186,21 +186,19 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             return NormalizedType(stringLiteral: base)
         case .classRestriction(let type):
             // Not handling `_attributedSyntax` because `classRestriction` cannot have any attribute
-            
-            // let normalizedType: NormalizedType = "AnyObject"
             let normalizedType: NormalizedType = .simple(.init(.init(
                 leadingTrivia: type._baseSyntax.leadingTrivia,
                 name: .identifier("AnyObject"),
                 trailingTrivia: type._baseSyntax.trailingTrivia
             )))
-            return normalizedType
             
+            return normalizedType
         case .composition(let type):
             // Looks like there can only be simple types in composition, with no generics, and therefore we
             // don't ned to recursively normalize
             
             return .composition(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
-        case .someOrAny(let type):            
+        case .someOrAny(let type):
             var someOrAnyTypeSyntax: SomeOrAnyTypeSyntax = type._baseSyntax
             var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
             
@@ -223,7 +221,6 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
                 base = base.addingAttributes(from: attributedTypeSyntax)
             }
             return NormalizedType(stringLiteral: base)
-            
         case .function(let type):
             var functionTypeSyntax: FunctionTypeSyntax
             var attributedTypeSyntax: AttributedTypeSyntax? = nil
@@ -247,7 +244,6 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             attributedTypeSyntax?.baseType = TypeSyntax(functionTypeSyntax)
                 
             return .function(.init(functionTypeSyntax, attributedSyntax: attributedTypeSyntax))
-            
         case .implicitlyUnwrappedOptional(let type):
             var implicitlyUnwrappedOptionalTypeSyntax: ImplicitlyUnwrappedOptionalTypeSyntax = type._baseSyntax
             var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
@@ -257,7 +253,6 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             attributedTypeSyntax?.baseType = TypeSyntax(implicitlyUnwrappedOptionalTypeSyntax)
             
             return .implicitlyUnwrappedOptional(.init(implicitlyUnwrappedOptionalTypeSyntax, attributedSyntax: attributedTypeSyntax))
-            
         case .member(let type):
             var memberTypeSyntax: MemberTypeSyntax = type._baseSyntax
             var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
@@ -269,7 +264,6 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
             attributedTypeSyntax?.baseType = TypeSyntax(memberTypeSyntax)
             
             return .member(.init(memberTypeSyntax, attributedSyntax: attributedTypeSyntax))
-            
         case .metatype(let type):
             let baseType = type._baseSyntax
             let memberTypeSyntax = MemberTypeSyntax.init(
