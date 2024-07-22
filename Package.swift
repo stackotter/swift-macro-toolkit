@@ -14,10 +14,10 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/apple/swift-syntax.git",
+            url: "https://github.com/swiftlang/swift-syntax.git",
             from: "510.0.0"
         ),
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/SwiftPackageIndex/SPIManifest.git", from: "0.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0"),
     ],
