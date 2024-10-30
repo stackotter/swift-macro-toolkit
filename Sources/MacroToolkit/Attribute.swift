@@ -14,7 +14,7 @@ public struct Attribute {
     public init(named name: String) {
         _syntax = AttributeSyntax(
             attributeName: IdentifierTypeSyntax(
-                name: .identifier("DictionaryStorage")
+                name: .identifier(name)
             )
         )
     }
