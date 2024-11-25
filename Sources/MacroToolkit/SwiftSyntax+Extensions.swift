@@ -67,7 +67,9 @@ extension FunctionDeclSyntax {
     public var effectSpecifiersOrDefault: FunctionEffectSpecifiersSyntax {
         signature.effectSpecifiers
             ?? FunctionEffectSpecifiersSyntax(
-                leadingTrivia: " ", asyncSpecifier: nil, throwsClause: nil
+                leadingTrivia: " ",
+                asyncSpecifier: nil,
+                throwsClause: nil
             )
     }
 
@@ -92,7 +94,12 @@ extension FunctionDeclSyntax {
                 .with(
                     \.effectSpecifiers,
                     effectSpecifiersOrDefault
-                        .with(\.throwsClause, isPresent ? ThrowsClauseSyntax(throwsSpecifier: " throws") : nil)
+                        .with(
+                            \.throwsClause,
+                            isPresent
+                                ? ThrowsClauseSyntax(throwsSpecifier: .keyword(.throws))
+                                : nil
+                        )
                 )
         )
     }

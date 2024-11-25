@@ -32,7 +32,7 @@ public struct Function {
     }
 
     public var isThrowing: Bool {
-        _syntax.signature.effectSpecifiers?.throwsClause?.throwsSpecifier != nil
+        _syntax.signature.effectSpecifiers?.throwsClause != nil
     }
 
     public var parameters: [FunctionParameter] {

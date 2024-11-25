@@ -24,7 +24,6 @@ final class MacroToolkitTests: XCTestCase {
         withMacroTesting(
             macros: testMacros
         ) {
-            isRecording = false
             super.invokeTest()
         }
     }
