@@ -112,7 +112,7 @@ public struct DiagnosticBuilder {
                 message: SimpleDiagnosticMessage(
                     message: message ?? "suggested replacement",
                     diagnosticID: messageID ?? self.messageID,
-                    severity: .error
+                    severity: severity
                 ),
                 changes: [
                     FixIt.Change.replace(
@@ -120,7 +120,8 @@ public struct DiagnosticBuilder {
                         newNode: Syntax(new)
                     )
                 ]
-            ))
+            )
+        )
     }
 
     /// Set the message id (shorthand for ``messageID(_:)``).
