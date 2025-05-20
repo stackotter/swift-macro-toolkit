@@ -22,7 +22,7 @@ public struct SimpleType: TypeProtocol {
     /// `Dictionary<Int, String>` it would be `["Int", "String"]`).
     public var genericArguments: [Type]? {
         _baseSyntax.genericArgumentClause.map { clause in
-            clause.arguments.map(\.argument).map(Type.init)
+            clause.arguments.map(\.argument).compactMap { $0.as(TypeSyntax.self).map(Type.init) }
         }
     }
 }
