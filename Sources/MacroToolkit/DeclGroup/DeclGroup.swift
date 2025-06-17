@@ -9,6 +9,7 @@ public enum DeclGroup: DeclGroupProtocol {
     case `class`(Class)
     case `actor`(Actor)
     case `extension`(Extension)
+    case `protocol`(Protocol)
 
     /// A private computed property that returns the wrapped `DeclGroupProtocol` instance.
     ///
@@ -20,6 +21,7 @@ public enum DeclGroup: DeclGroupProtocol {
             case .class(let wrapped): return wrapped
             case .actor(let wrapped): return wrapped
             case .extension(let wrapped): return wrapped
+            case .protocol(let wrapped): return wrapped
         }
     }
 
@@ -38,6 +40,8 @@ public enum DeclGroup: DeclGroupProtocol {
             self = .extension(Extension(syntax))
         } else if let syntax = syntax.as(StructDeclSyntax.self) {
             self = .struct(Struct(syntax))
+        } else if let syntax = syntax.as(ProtocolDeclSyntax.self) {
+            self = .protocol(Protocol(syntax))
         } else {
             fatalError("Unhandled decl group type '\(type(of: syntax))'")
         }
