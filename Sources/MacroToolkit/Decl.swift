@@ -25,4 +25,14 @@ public struct Decl {
     public var asVariable: Variable? {
         _syntax.as(VariableDeclSyntax.self).map(Variable.init)
     }
+    
+    /// Attempts to get the declaration as a function.
+    public var asFunction: Function? {
+        _syntax.as(FunctionDeclSyntax.self).map(Function.init)
+    }
+    
+    /// Attempts to get the declaration as a function.
+    public var asAssociatedType: AssociatedType? {
+        _syntax.as(AssociatedTypeDeclSyntax.self).map(AssociatedType.init)
+    }
 }
