@@ -31,7 +31,7 @@ public struct Decl {
         _syntax.as(FunctionDeclSyntax.self).map(Function.init)
     }
     
-    /// Attempts to get the declaration as a function.
+    /// Attempts to get the declaration as a associatedtype.
     public var asAssociatedType: AssociatedType? {
         _syntax.as(AssociatedTypeDeclSyntax.self).map(AssociatedType.init)
     }
