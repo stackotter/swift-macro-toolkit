@@ -10,6 +10,10 @@ public struct Enum: DeclGroupProtocol, RepresentableBySyntax {
         _syntax.name.withoutTrivia().text
     }
 
+    public var rawRepresentableType: EnumRawRepresentableType? {
+        EnumRawRepresentableType(possibleRawType: _syntax.inheritanceClause?.inheritedTypes.first)
+    }
+
     /// Initializes an `Enum` instance with the given syntax node.
     ///
     /// - Parameter syntax: The syntax node representing the `enum` declaration.
@@ -19,12 +23,17 @@ public struct Enum: DeclGroupProtocol, RepresentableBySyntax {
 
     /// The `enum`'s cases.
     public var cases: [EnumCase] {
-        _syntax.memberBlock.members
+        var lastSeen: EnumCase?
+        return _syntax.memberBlock.members
             .compactMap { member in
                 member.decl.as(EnumCaseDeclSyntax.self)
             }
             .flatMap { syntax in
-                syntax.elements.map(EnumCase.init)
+                syntax.elements.map {
+                    let next = EnumCase($0, rawRepresentableType: rawRepresentableType, precedingCase: lastSeen)
+                    lastSeen = next
+                    return next
+                }
             }
     }
 }
