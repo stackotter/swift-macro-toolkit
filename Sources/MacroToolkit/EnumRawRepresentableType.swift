@@ -5,7 +5,7 @@ public enum EnumRawRepresentableType {
     case string(syntax: IdentifierTypeSyntax)
     case character(syntax: IdentifierTypeSyntax)
     case integer(syntax: IdentifierTypeSyntax)
-    case float(syntax: IdentifierTypeSyntax)
+    case floatingPoint(syntax: IdentifierTypeSyntax)
 
     init?(possibleRawType syntax: InheritedTypeSyntax?) {
         guard let type = syntax?.type.as(IdentifierTypeSyntax.self) else { return nil }
@@ -19,7 +19,7 @@ public enum EnumRawRepresentableType {
                 self = .integer(syntax: type)
             case "Float", "Float16", "Float32", "Float64",
                  "Double", "CGFloat", "NSNumber":
-                self = .float(syntax: type)
+                self = .floatingPoint(syntax: type)
             default: return nil
         }
     }

@@ -14,7 +14,7 @@ public struct EnumCase {
             switch rawRepresentableType {
                 case .string: .inferredRawValue(.init(value: "\"\(raw: _syntax.name.text)\"" as ExprSyntax))
                 case .character: nil // Characters cannot be inferred
-                case .integer, .float: .inferredRawValue(.init(value: "\(raw: (previousValue() ?? -1) + 1)" as ExprSyntax))
+                case .integer, .floatingPoint: .inferredRawValue(.init(value: "\(raw: (previousValue() ?? -1) + 1)" as ExprSyntax))
             }
         } else {
             nil

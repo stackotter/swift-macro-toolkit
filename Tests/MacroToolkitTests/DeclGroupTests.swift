@@ -231,7 +231,7 @@ final class DeclGroupTests: XCTestCase {
         XCTAssertEqual(testEnum.identifier, "TestEnum")
         XCTAssertEqual(testEnum.members.count, 3)
         XCTAssertEqual(testEnum.cases.count, 3)
-        guard case .float = testEnum.rawRepresentableType else { return XCTFail() }
+        guard case .floatingPoint = testEnum.rawRepresentableType else { return XCTFail() }
         XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1", "2", "3"])
     }
     
@@ -249,7 +249,7 @@ final class DeclGroupTests: XCTestCase {
         XCTAssertEqual(testEnum.identifier, "TestEnum")
         XCTAssertEqual(testEnum.members.count, 3)
         XCTAssertEqual(testEnum.cases.count, 3)
-        guard case .float = testEnum.rawRepresentableType else { return XCTFail() }
+        guard case .floatingPoint = testEnum.rawRepresentableType else { return XCTFail() }
         XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1.1", "1.2", "1.3"])
     }
 }
