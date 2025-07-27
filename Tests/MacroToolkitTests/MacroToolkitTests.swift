@@ -360,6 +360,9 @@ final class MacroToolkitTests: XCTestCase {
         XCTAssertEqual(FloatLiteral(hexFloatLiteral)?.value, -0xFp-2_)
         XCTAssertEqual(
             FloatLiteral(hexFloatLiteralWithFractional)?.value, -0xF.0f_ep-2_, "Fair enough")
+        
+        XCTAssertEqual(FloatLiteral("1.1" as ExprSyntax)?.value, 1.1)
+        XCTAssertEqual(FloatLiteral("10.02" as ExprSyntax)?.value, 10.02)
     }
 
     func testStringLiteralParsing() {

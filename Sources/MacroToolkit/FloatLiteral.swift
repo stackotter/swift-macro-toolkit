@@ -100,7 +100,7 @@ public struct FloatLiteral: LiteralProtocol {
 
             fractionalPartValue =
                 Double(fractionalPartDigitsValue)
-                / pow(Double(radix), Double(fractionalPart.count - 1))
+                / pow(Double(radix), Double(fractionalPartWithoutUnderscores.count))
         } else {
             fractionalPartValue = 0
         }
