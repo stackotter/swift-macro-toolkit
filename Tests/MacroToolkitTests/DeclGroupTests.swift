@@ -172,13 +172,7 @@ final class DeclGroupTests: XCTestCase {
         XCTAssertEqual(testEnum.members.count, 1)
         XCTAssertEqual(testEnum.cases.count, 3)
         XCTAssertEqual(testEnum.rawRepresentableType, .string)
-        let literals = testEnum.cases.map {
-            switch $0.value {
-            case .rawValue(let i), .inferredRawValue(let i): return StringLiteral(i.value)?.value
-            default: return nil
-            }
-        }
-        XCTAssertEqual(literals, ["caseOne", "caseTwo", "case3"])
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), [#""caseOne""#, #""caseTwo""#, #""case3""#])
     }
     
     func testEnumRawTypeInferredValueInt() throws {
@@ -192,13 +186,7 @@ final class DeclGroupTests: XCTestCase {
         XCTAssertEqual(testEnum.members.count, 1)
         XCTAssertEqual(testEnum.cases.count, 3)
         XCTAssertEqual(testEnum.rawRepresentableType, .number)
-        let literals = testEnum.cases.map {
-            switch $0.value {
-            case .rawValue(let i), .inferredRawValue(let i): return IntegerLiteral(i.value)?.value
-            default: return nil
-            }
-        }
-        XCTAssertEqual(literals, [1, 2, 3])
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1", "2", "3"])
     }
     
     func testEnumRawTypeInferredValueNegativeInt() throws {
@@ -212,18 +200,12 @@ final class DeclGroupTests: XCTestCase {
         XCTAssertEqual(testEnum.members.count, 1)
         XCTAssertEqual(testEnum.cases.count, 3)
         XCTAssertEqual(testEnum.rawRepresentableType, .number)
-        let literals = testEnum.cases.map {
-            switch $0.value {
-            case .rawValue(let i), .inferredRawValue(let i): return IntegerLiteral(i.value)?.value
-            default: return nil
-            }
-        }
-        XCTAssertEqual(literals, [-1, 0, 1])
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["-1", "0", "1"])
     }
     
-    func testEnumRawTypeInferredValueDouble() throws {
+    func testEnumRawTypeInferredValueIntMiddle() throws {
         let decl: DeclSyntax = """
-            enum TestEnum: Double { case caseOne = 1, caseTwo, caseThree }
+            enum TestEnum: Int { case a, b = 5, c }
             """
         let enumDecl = decl.as(EnumDeclSyntax.self)!
         let testEnum = Enum(enumDecl)
@@ -232,12 +214,42 @@ final class DeclGroupTests: XCTestCase {
         XCTAssertEqual(testEnum.members.count, 1)
         XCTAssertEqual(testEnum.cases.count, 3)
         XCTAssertEqual(testEnum.rawRepresentableType, .number)
-        let literals = testEnum.cases.map {
-            switch $0.value {
-            case .rawValue(let i), .inferredRawValue(let i): return IntegerLiteral(i.value)?.value
-            default: return nil
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["0", "5", "6"])
+    }
+    
+    func testEnumRawTypeInferredValueDouble() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: Double { 
+                case caseOne = 1 
+                case caseTwo
+                case caseThree 
             }
-        }
-        XCTAssertEqual(literals, [1, 2, 3])
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 3)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        XCTAssertEqual(testEnum.rawRepresentableType, .number)
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1", "2", "3"])
+    }
+    
+    func testEnumRawTypeInferredValueDoubleLiteral() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: Double { 
+                case caseOne = 1.1 
+                case caseTwo = 1.2
+                case caseThree = 1.3
+            }
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 3)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        XCTAssertEqual(testEnum.rawRepresentableType, .number)
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1.1", "1.2", "1.3"])
     }
 }

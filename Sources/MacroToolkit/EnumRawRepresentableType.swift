@@ -8,14 +8,14 @@ public enum EnumRawRepresentableType {
 
     init?(possibleRawType syntax: InheritedTypeSyntax?) {
         switch syntax?.type.as(IdentifierTypeSyntax.self)?.name.text {
-        case "String": self = .string
-        case "Character": self = .character
-        case "Int", "Int8", "Int16", "Int32", "Int64", "Int128",
-            "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "UInt128",
-            "Float", "Float16", "Float32", "Float64",
-            "Double", "CGFloat", "NSNumber":
-            self = .number
-        default: return nil
+            case "String": self = .string
+            case "Character": self = .character
+            case "Int", "Int8", "Int16", "Int32", "Int64", "Int128",
+                 "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "UInt128",
+                 "Float", "Float16", "Float32", "Float64",
+                 "Double", "CGFloat", "NSNumber":
+                self = .number
+            default: return nil
         }
     }
 }
