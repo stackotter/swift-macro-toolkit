@@ -63,7 +63,7 @@ public struct Property {
             accessors: accessors,
             attributes: attributes,
             modifiers: Array(decl._syntax.modifiers),
-            keyword: decl._syntax.bindingSpecifier.text,
+            keyword: decl._syntax.bindingSpecifier.text
         )
     }
 
