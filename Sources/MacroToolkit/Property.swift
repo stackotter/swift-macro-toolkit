@@ -10,12 +10,20 @@ import SwiftSyntax
 public struct Property {
     public var _syntax: TokenSyntax
     public var attributes: [AttributeListElement]
-    public var isLazy: Bool
+    public var modifiers: [DeclModifierSyntax]
     public var keyword: String
     public var identifier: String
     public var type: Type?
     public var initialValue: Expr?
     public var accessors: [AccessorDeclSyntax]
+
+    public var isLazy: Bool {
+        modifiers.contains { $0.name.text == "lazy" }
+    }
+
+    public var isStatic: Bool {
+        modifiers.contains { $0.name.text == "static" }
+    }
 
     public var getter: AccessorDeclSyntax? {
         accessors.first { $0.accessorSpecifier.tokenKind == .keyword(.get) }
@@ -29,9 +37,10 @@ public struct Property {
         getter == nil
     }
 
-    static func properties(from binding: PatternBindingSyntax, in decl: Variable)
-        -> [Property]
-    {
+    static func properties(
+        from binding: PatternBindingSyntax,
+        in decl: Variable
+    ) -> [Property] {
         let accessors: [AccessorDeclSyntax] =
             switch binding.accessorBlock?.accessors {
                 case .accessors(let block):
@@ -53,8 +62,8 @@ public struct Property {
             type: (binding.typeAnnotation?.type).map(Type.init),
             accessors: accessors,
             attributes: attributes,
+            modifiers: Array(decl._syntax.modifiers),
             keyword: decl._syntax.bindingSpecifier.text,
-            isLazy: decl._syntax.modifiers.contains { $0.name.text == "lazy" }
         )
     }
 
@@ -64,8 +73,8 @@ public struct Property {
         type: Type?,
         accessors: [AccessorDeclSyntax],
         attributes: [AttributeListElement],
-        keyword: String,
-        isLazy: Bool
+        modifiers: [DeclModifierSyntax],
+        keyword: String
     ) -> [Property] {
         switch pattern.asProtocol(PatternSyntaxProtocol.self) {
             case let pattern as IdentifierPatternSyntax:
@@ -93,7 +102,7 @@ public struct Property {
                     Property(
                         _syntax: pattern.identifier,
                         attributes: attributes,
-                        isLazy: isLazy,
+                        modifiers: modifiers,
                         keyword: keyword,
                         identifier: pattern.identifier.text,
                         type: type,
@@ -127,9 +136,11 @@ public struct Property {
                             initialValue.map { expr in
                                 Expr(
                                     MemberAccessExprSyntax(
-                                        leadingTrivia: nil, base: expr._syntax.parenthesized,
+                                        leadingTrivia: nil,
+                                        base: expr._syntax.parenthesized,
                                         period: .periodToken(),
-                                        name: .identifier(String(index)), trailingTrivia: nil
+                                        name: .identifier(String(index)),
+                                        trailingTrivia: nil
                                     )
                                 )
                             }
@@ -148,8 +159,13 @@ public struct Property {
 
                     // Tuple bindings can't have accessors or attributes (i.e. property wrappers or macros)
                     return properties(
-                        pattern: element.pattern, initialValue: initialValue, type: type,
-                        accessors: [], attributes: [], keyword: keyword, isLazy: isLazy
+                        pattern: element.pattern,
+                        initialValue: initialValue,
+                        type: type,
+                        accessors: [],
+                        attributes: [],
+                        modifiers: modifiers,
+                        keyword: keyword
                     )
                 }
             case _ as WildcardPatternSyntax:
