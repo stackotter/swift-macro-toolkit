@@ -137,25 +137,20 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
 
     /// A normalized description of the type (e.g. for `()` this would be `Void`).
     public var normalizedDescription: String {
-        // TODO: Implement proper type normalization
-        // TODO: Normalize types nested within the type too (e.g. the parameter types of a function type)
-        if let tupleSyntax = _syntax.as(TupleTypeSyntax.self) {
-            if tupleSyntax.elements.count == 0 {
-                return "Void"
-            } else if tupleSyntax.elements.count == 1, let element = tupleSyntax.elements.first {
-                // TODO: Can we assume that we won't get a single-element tuple with a label (which would be invalid anyway)?
-                return element.type.withoutTrivia().description
-            } else {
-                return _syntax.withoutTrivia().description
-            }
-        } else {
-            return _syntax.withoutTrivia().description
-        }
+        normalized()._syntax.withoutTrivia().description
     }
 
     /// Gets whether the type is a void type (i.e. `Void`, `()`, `(Void)`, `((((()))))`, etc.).
     public var isVoid: Bool {
-        normalizedDescription == "Void"
+        normalizedDescription == "\(Void.self)"
+    }
+    
+    /// Gets whether the type is optional
+    public var isOptional: Bool {
+        if case .simple(let normalizedSimpleType) = self.normalized() {
+            return normalizedSimpleType.name == "Optional"
+        }
+        return false
     }
 
     // TODO: Generate type conversions with macro?
@@ -176,6 +171,206 @@ public enum `Type`: TypeProtocol, SyntaxExpressibleByStringInterpolation {
     }
 
     // TODO: Implement rest of conversions
+    
+    public func normalized() -> NormalizedType {
+        switch self {
+        case .array(let type):
+            var arrayTypeSyntax: ArrayTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            let normalizedElement = Type(arrayTypeSyntax.element).normalized()
+            arrayTypeSyntax.element = TypeSyntax(normalizedElement._syntax)
+            attributedTypeSyntax?.baseType = TypeSyntax(arrayTypeSyntax)
+            
+            var base = "Array<\(arrayTypeSyntax.element)>"
+            if let attributedTypeSyntax {
+                base = base.addingAttributes(from: attributedTypeSyntax)
+            }
+            return NormalizedType(stringLiteral: base)
+        case .classRestriction(let type):
+            // Not handling `_attributedSyntax` because `classRestriction` cannot have any attribute
+            let normalizedType: NormalizedType = .simple(.init(.init(
+                leadingTrivia: type._baseSyntax.leadingTrivia,
+                name: .identifier("AnyObject"),
+                trailingTrivia: type._baseSyntax.trailingTrivia
+            )))
+            
+            return normalizedType
+        case .composition(let type):
+            var compositionTypeSyntax: CompositionTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            
+            let arrayOfCompositionElements = compositionTypeSyntax.elements.map { compositionElement in
+                let normalizedType = Type(compositionElement.type).normalized()
+                let updatedElementType = TypeSyntax(normalizedType._syntax)
+                var newCompositionElement = compositionElement
+                newCompositionElement.type = updatedElementType
+                return newCompositionElement
+            }
+            
+            compositionTypeSyntax.elements = .init(arrayOfCompositionElements)
+            attributedTypeSyntax?.baseType = TypeSyntax(compositionTypeSyntax)
+            
+            return .composition(.init(compositionTypeSyntax, attributedSyntax: attributedTypeSyntax))
+        case .someOrAny(let type):
+            var someOrAnyTypeSyntax: SomeOrAnyTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            
+            let normalizedConstraint = Type(someOrAnyTypeSyntax.constraint).normalized()
+            someOrAnyTypeSyntax.constraint = TypeSyntax(normalizedConstraint._syntax)
+            attributedTypeSyntax?.baseType = TypeSyntax(someOrAnyTypeSyntax)
+            
+            return .someOrAny(.init(someOrAnyTypeSyntax, attributedSyntax: attributedTypeSyntax))
+        case .dictionary(let type):
+            var dictionaryTypeSyntax: DictionaryTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            let normalizedKey = Type(dictionaryTypeSyntax.key).normalized()
+            let normalizedValue = Type(dictionaryTypeSyntax.value).normalized()
+            dictionaryTypeSyntax.key = TypeSyntax(normalizedKey._syntax)
+            dictionaryTypeSyntax.value = TypeSyntax(normalizedValue._syntax)
+            attributedTypeSyntax?.baseType = TypeSyntax(dictionaryTypeSyntax)
+            
+            var base = "Dictionary<\(dictionaryTypeSyntax.key), \(dictionaryTypeSyntax.value)>"
+            if let attributedTypeSyntax {
+                base = base.addingAttributes(from: attributedTypeSyntax)
+            }
+            return NormalizedType(stringLiteral: base)
+        case .function(let type):
+            var functionTypeSyntax: FunctionTypeSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = nil
+            if let attributedSyntax = type._attributedSyntax {
+                functionTypeSyntax = attributedSyntax.baseType.cast(FunctionTypeSyntax.self)
+                attributedTypeSyntax = attributedSyntax
+            } else {
+                functionTypeSyntax = type._baseSyntax
+            }
+            let normalizedReturnClause = Type(functionTypeSyntax.returnClause.type).normalized()
+            let arrayOfTupleElements = functionTypeSyntax.parameters.map { tupleElement in
+                let normalizedType = Type(tupleElement.type).normalized()
+                let updatedElementType = TypeSyntax(normalizedType._syntax)
+                var newTupleElement = tupleElement
+                newTupleElement.type = updatedElementType
+                return newTupleElement
+            }
+            functionTypeSyntax.parameters = .init(arrayOfTupleElements)
+            
+            functionTypeSyntax.returnClause.type = TypeSyntax(normalizedReturnClause._syntax)
+            attributedTypeSyntax?.baseType = TypeSyntax(functionTypeSyntax)
+                
+            return .function(.init(functionTypeSyntax, attributedSyntax: attributedTypeSyntax))
+        case .implicitlyUnwrappedOptional(let type):
+            var implicitlyUnwrappedOptionalTypeSyntax: ImplicitlyUnwrappedOptionalTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            
+            let normalizedConstraint = Type(implicitlyUnwrappedOptionalTypeSyntax.wrappedType).normalized()
+            implicitlyUnwrappedOptionalTypeSyntax.wrappedType = TypeSyntax(normalizedConstraint._syntax)
+            attributedTypeSyntax?.baseType = TypeSyntax(implicitlyUnwrappedOptionalTypeSyntax)
+            
+            return .implicitlyUnwrappedOptional(.init(implicitlyUnwrappedOptionalTypeSyntax, attributedSyntax: attributedTypeSyntax))
+        case .member(let type):
+            var memberTypeSyntax: MemberTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            let normalizedBaseType = Type(type._baseSyntax.baseType).normalized()
+            
+            memberTypeSyntax.genericArgumentClause = memberTypeSyntax.genericArgumentClause?.normalized()
+            
+            memberTypeSyntax.baseType = TypeSyntax(normalizedBaseType._syntax)
+            attributedTypeSyntax?.baseType = TypeSyntax(memberTypeSyntax)
+            
+            return .member(.init(memberTypeSyntax, attributedSyntax: attributedTypeSyntax))
+        case .metatype(let type):
+            let baseType = type._baseSyntax
+            let memberTypeSyntax = MemberTypeSyntax.init(
+                leadingTrivia: baseType.leadingTrivia,
+                baseType: baseType.baseType,
+                name: baseType.metatypeSpecifier,
+                trailingTrivia: baseType.trailingTrivia
+            )
+            if var attributedSyntax = type._attributedSyntax {
+                attributedSyntax.baseType = TypeSyntax(memberTypeSyntax)
+                return .member(.init(memberTypeSyntax, attributedSyntax: attributedSyntax))
+            } else {
+                return .member(.init(memberTypeSyntax))
+            }
+        case .missing(let type):
+            return .missing(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
+        case .optional(let type):
+            let optionalTypeSyntax: OptionalTypeSyntax = type._baseSyntax
+            let attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            let normalizedElement = Type(optionalTypeSyntax.wrappedType).normalized()
+            
+            let identifierSyntax = IdentifierTypeSyntax(
+                leadingTrivia: optionalTypeSyntax.leadingTrivia,
+                name: .identifier("Optional"),
+                genericArgumentClause: .init(
+                    arguments: .init(arrayLiteral: .init(argument: TypeSyntax(normalizedElement._syntax)))
+                ),
+                trailingTrivia: optionalTypeSyntax.leadingTrivia
+            )
+
+            if let attributedTypeSyntax {
+                let normalizedAttributedTypeSyntax = identifierSyntax.addingAttributes(from: attributedTypeSyntax)
+                return .simple(.init(identifierSyntax, attributedSyntax: normalizedAttributedTypeSyntax))
+            } else {
+                return .simple(.init(identifierSyntax))
+            }
+        case .packExpansion(let type):
+            // Looks like there can only be simple identifiers in pack expansions, with no generics, and therefore we
+            // don't ned to recursively normalize
+            
+            return .packExpansion(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
+        case .packReference(let type):
+            // Looks like there can only be simple identifiers in pack references, with no generics, and therefore we
+            // don't ned to recursively normalize
+            
+            return .packReference(.init(type._baseSyntax, attributedSyntax: type._attributedSyntax))
+        case .simple(let type):
+            if type.name == "Void" {
+                return .tuple(.init(.init(elements: [])))
+            }
+            var identifierTypeSyntax: IdentifierTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            
+            identifierTypeSyntax.genericArgumentClause = identifierTypeSyntax.genericArgumentClause?.normalized()
+            
+            attributedTypeSyntax?.baseType = TypeSyntax(identifierTypeSyntax)
+            
+            return .simple(.init(identifierTypeSyntax, attributedSyntax: attributedTypeSyntax))
+        case .suppressed(let type):
+            // Normalizing recursively because it may be needed when https://github.com/apple/swift/issues/62906
+            // is fixed. Not handling `_attributedSyntax` because seems like `suppressed` cannot have any attribute
+            var suppressedTypeSyntax: SuppressedTypeSyntax = type._baseSyntax
+            
+            let normalizedConstraint = Type(suppressedTypeSyntax.type).normalized()
+            suppressedTypeSyntax.type = TypeSyntax(normalizedConstraint._syntax)
+                        
+            return .suppressed(.init(suppressedTypeSyntax))
+        case .tuple(let type):
+            if type.elements.count == 1 {
+                let child = type.elements[0]
+                switch child {
+                case .tuple, .simple:
+                    return child.normalized()
+                default:
+                    break
+                }
+            }
+            
+            var tupleTypeSyntax: TupleTypeSyntax = type._baseSyntax
+            var attributedTypeSyntax: AttributedTypeSyntax? = type._attributedSyntax
+            
+            let arrayOfTupleElements = tupleTypeSyntax.elements.map { tupleElement in
+                let normalizedType = Type(tupleElement.type).normalized()
+                let updatedElementType = TypeSyntax(normalizedType._syntax)
+                var newTupleElement = tupleElement
+                newTupleElement.type = updatedElementType
+                return newTupleElement
+            }
+            tupleTypeSyntax.elements = .init(arrayOfTupleElements)
+            
+            attributedTypeSyntax?.baseType = TypeSyntax(tupleTypeSyntax)
+            return .tuple(.init(tupleTypeSyntax, attributedSyntax: attributedTypeSyntax))
+        }
+    }
 }
 
 extension Type? {
@@ -186,5 +381,60 @@ extension Type? {
         } else {
             return true
         }
+    }
+}
+
+// MARK: Utilities for normalization
+
+fileprivate extension String {
+    /// Builds a `String` that can then be used for interpolation attaching the attributes and
+    /// the specifiers of the attributed type syntax.
+    /// - Parameter attributedType: The `AttributedTypeSyntax` which `attributes`
+    /// and `specifier` should be used to prefix the string.
+    /// - Returns: A `String` with elements from the attributed type syntax attached to the original `String`.
+    func addingAttributes(from attributedType: AttributedTypeSyntax) -> String {
+        var updatedString = self
+        updatedString = "\(attributedType.attributes)\(self)"
+        
+        if let specifier = attributedType.specifier {
+            updatedString = "\(specifier)\(updatedString)"
+        }
+        
+        return updatedString
+    }
+}
+
+fileprivate extension TypeSyntaxProtocol {
+    /// Builds a `AttributedTypeSyntax` attaching the attributes and
+    /// the specifiers of the attributed type syntax.
+    /// - Parameter attributedType: The `AttributedTypeSyntax` which `attributes`
+    /// and `specifier` should be attached to the `TypeSyntax`.
+    /// - Returns: A `AttributedTypeSyntax` with elements from the attributed type syntax attached to the original `TypeSyntax`.
+    func addingAttributes(from attributedType: AttributedTypeSyntax) -> AttributedTypeSyntax {
+        return AttributedTypeSyntax(
+            leadingTrivia: attributedType.leadingTrivia,
+            specifier: attributedType.specifier,
+            attributes: attributedType.attributes,
+            baseType: self,
+            trailingTrivia: attributedType.trailingTrivia
+        )
+    }
+}
+
+fileprivate extension GenericArgumentClauseSyntax {
+    /// Normalize the arguments of the generic.
+    /// - Returns: An updated version of the generic argument clause with
+    /// the arguments types  normalized.
+    func normalized() -> Self {
+        var genericArgumentClause = self
+        let arrayOfGenericArgumentClauseArguments = genericArgumentClause.arguments.map { tupleElement in
+            let normalizedType = Type(tupleElement.argument).normalized()
+            let updatedElementType = TypeSyntax(normalizedType._syntax)
+            var newTupleElement = tupleElement
+            newTupleElement.argument = updatedElementType
+            return newTupleElement
+        }
+        genericArgumentClause.arguments = .init(arrayOfGenericArgumentClauseArguments)
+        return genericArgumentClause
     }
 }
