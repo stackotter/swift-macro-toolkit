@@ -340,3 +340,45 @@ let diagnostic = Diagnostic(
     ]
 )
 ```
+
+## Installation
+
+Add `swift-macro-toolkit` dependency to your package file. 
+
+```swift
+.package(
+    url: "https://github.com/stackotter/swift-macro-toolkit.git", 
+    .upToNextMinor(from: "0.8.0") // swift-syntax 602.0.0
+)
+```
+
+Do not forget about target dependencies:
+
+```swift
+.product(
+    name: "MacroToolkit", 
+    package: "swift-macro-toolkit"
+)
+```
+
+> [!TIP]
+>
+> _You can extend compatibility by supporting older swift versions_
+>
+> ```swift
+> .package(
+>     url: "https://github.com/stackotter/swift-macro-toolkit.git", 
+>     "0.3.1"..."0.8.0" // swift-syntax 509.0.0...602.0.0
+> )
+> ```
+>
+> **Version map**
+>
+> | swift-macro-toolkit | swift-syntax                   |
+> | ------------------- | ------------------------------ |
+> | `0.3.1`             | `apple/swift-syntax` `509.0.0` |
+> | `0.4.0`             | `apple/swift-syntax` `510.0.0` |
+> | `0.5.0`             | `510.0.0`                      |
+> | `0.6.0`             | `600.0.0`                      |
+> | `0.7.0`             | `601.0.0`                      |
+> | `0.8.0`             | `602.0.0`                      |
