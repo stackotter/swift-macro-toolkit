@@ -363,7 +363,7 @@ Do not forget about target dependencies:
 
 > [!TIP]
 >
-> _You can extend compatibility by supporting older swift versions_
+> _You can extend compatibility by supporting multiple [`swift-syntax`](https://github.com/swiftlang/swift-syntax) versions_
 >
 > ```swift
 > .package(
