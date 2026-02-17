@@ -1,5 +1,7 @@
 # Swift Macro Toolkit
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fstackotter%2Fswift-macro-toolkit%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/stackotter/swift-macro-toolkit) [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fstackotter%2Fswift-macro-toolkit%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/stackotter/swift-macro-toolkit)
+
 **Did you know that `-0xF_ep-0_2` is a valid floating point literal in Swift?** Well you probably didn't
 (it's equal to -63.5), and as a macro author you shouldn't even have to care! Among many things, Macro
 Toolkit shields you from edge cases so that users can use your macros in whatever weird (but correct)
@@ -340,3 +342,45 @@ let diagnostic = Diagnostic(
     ]
 )
 ```
+
+## Installation
+
+Add `swift-macro-toolkit` dependency to your package file. 
+
+```swift
+.package(
+    url: "https://github.com/stackotter/swift-macro-toolkit.git", 
+    .upToNextMinor(from: "0.8.0") // swift-syntax 602.0.0
+)
+```
+
+Do not forget about target dependencies:
+
+```swift
+.product(
+    name: "MacroToolkit", 
+    package: "swift-macro-toolkit"
+)
+```
+
+> [!TIP]
+>
+> _You can extend compatibility by supporting multiple [`swift-syntax`](https://github.com/swiftlang/swift-syntax) versions_
+>
+> ```swift
+> .package(
+>     url: "https://github.com/stackotter/swift-macro-toolkit.git", 
+>     "0.3.1"..."0.8.0" // swift-syntax 509.0.0...602.0.0
+> )
+> ```
+>
+> **Version map**
+>
+> | swift-macro-toolkit | swift-syntax                   |
+> | ------------------- | ------------------------------ |
+> | `0.3.1`             | `apple/swift-syntax` `509.0.0` |
+> | `0.4.0`             | `apple/swift-syntax` `510.0.0` |
+> | `0.5.0`             | `510.0.0`                      |
+> | `0.6.0`             | `600.0.0`                      |
+> | `0.7.0`             | `601.0.0`                      |
+> | `0.8.0`             | `602.0.0`                      |
