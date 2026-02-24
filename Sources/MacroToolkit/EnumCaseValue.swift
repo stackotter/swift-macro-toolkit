@@ -4,4 +4,5 @@ import SwiftSyntax
 public enum EnumCaseValue {
     case associatedValue([EnumCaseAssociatedValueParameter])
     case rawValue(InitializerClauseSyntax)
+    case inferredRawValue(InitializerClauseSyntax)
 }
