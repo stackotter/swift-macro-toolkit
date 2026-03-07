@@ -365,7 +365,7 @@ Do not forget about target dependencies:
 
 > [!TIP]
 >
-> _You can extend compatibility by supporting multiple [`swift-syntax`](https://github.com/swiftlang/swift-syntax) versions_
+> _You can extend compatibility of your libraries by supporting multiple [`swift-syntax`](https://github.com/swiftlang/swift-syntax) versions_
 >
 > ```swift
 > .package(
@@ -384,3 +384,10 @@ Do not forget about target dependencies:
 > | `0.6.0`             | `600.0.0`                      |
 > | `0.7.0`             | `601.0.0`                      |
 > | `0.8.0`             | `602.0.0`                      |
+>
+> _It is also possible to use local [`swift-syntax`](https://github.com/swiftlang/swift-syntax) overrides if some other dependency pervents you from depending on newer [`swift-macro-toolkit`](https://github.com/stackotter/swift-macro-toolkit) version and vice versa. It requires cloning [`swift-syntax`](https://github.com/swiftlang/swift-syntax) into a local directory and depending your app on the local clone. Usually [`swift-syntax`](https://github.com/swiftlang/swift-syntax) updates don't break macros_ 💁‍♂️
+>
+> ```swift
+> .package(path: "<path-to-local-swift-syntax>")
+> ```
+
