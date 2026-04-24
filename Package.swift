@@ -1,7 +1,26 @@
 // swift-tools-version: 5.9
 
 import CompilerPluginSupport
+import Foundation
 import PackageDescription
+
+let env = ProcessInfo.processInfo.environment
+let swiftSyntaxVersionOverride = env["MACROTOOLKIT_SWIFT_SYNTAX_VERSION_OVERRIDE"]
+
+let swiftSyntaxURL = "https://github.com/swiftlang/swift-syntax"
+let swiftSyntaxDependency: Package.Dependency
+if let swiftSyntaxVersionOverride, let version = Version(swiftSyntaxVersionOverride) {
+    swiftSyntaxDependency = .package(
+        url: swiftSyntaxURL,
+        from: version
+    )
+} else {
+    // This is the default
+    swiftSyntaxDependency = .package(
+        url: swiftSyntaxURL,
+        "600.0.0"..<"604.0.0"
+    )
+}
 
 let package = Package(
     name: "swift-macro-toolkit",
@@ -13,10 +32,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/swiftlang/swift-syntax.git",
-            from: "602.0.0"
-        ),
+        swiftSyntaxDependency,
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/SwiftPackageIndex/SPIManifest.git", from: "0.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0"),

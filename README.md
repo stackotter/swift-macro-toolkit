@@ -350,7 +350,7 @@ Add `swift-macro-toolkit` dependency to your package file.
 ```swift
 .package(
     url: "https://github.com/stackotter/swift-macro-toolkit.git", 
-    .upToNextMinor(from: "0.8.0") // swift-syntax 602.0.0
+    .upToNextMinor(from: "0.9.0") // swift-syntax 600.0.0 to 603.0.0
 )
 ```
 
@@ -369,8 +369,8 @@ Do not forget about target dependencies:
 >
 > ```swift
 > .package(
->     url: "https://github.com/stackotter/swift-macro-toolkit.git", 
->     "0.3.1"..."0.8.0" // swift-syntax 509.0.0...602.0.0
+>     url: "https://github.com/stackotter/swift-macro-toolkit", 
+>     "0.3.1"..."0.9.0" // swift-syntax 509.0.0...603.0.0
 > )
 > ```
 >
@@ -384,3 +384,4 @@ Do not forget about target dependencies:
 > | `0.6.0`             | `600.0.0`                      |
 > | `0.7.0`             | `601.0.0`                      |
 > | `0.8.0`             | `602.0.0`                      |
+> | `0.9.0`             | `600.0.0` to `603.0.0`         |
