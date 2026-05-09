@@ -686,4 +686,237 @@ final class MacroToolkitTests: XCTestCase {
             """
         }
     }
+    
+    func testNormalizedDecriptionMultipleVoid() {
+        let type: `Type` = "((()))"
+        
+        XCTAssertEqual(type.normalizedDescription, "()")
+    }
+    
+    func testIsVoid() {
+        let type: `Type` = "(())"
+        
+        XCTAssert(type.isVoid)
+    }
+    
+    func testIsOptional() {
+        let type1: `Type` = "Int?"
+        let type2: `Type` = "Optional<Int>"
+        let type3: `Type` = "Array<Int>"
+        
+        XCTAssert(type1.isOptional)
+        XCTAssert(type2.isOptional)
+        XCTAssertFalse(type3.isOptional)
+    }
+    
+    func testNormalizationVoid() {
+        let type: `Type` = "((()))"
+
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "()")
+    }
+    
+    func testNormalizationMultipleVoidWithOptional() {
+        let type: `Type` = "(((((()))?)))"
+
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "(Optional<()>)")
+    }
+    
+    func testNormalizationTuple() {        
+        let type1: `Type` = "(Optional<()>)"
+        let type2: `Type` = "((Int) -> (Int)) -> String"
+        
+        let normalizedType1 = type1.normalized()
+        let normalizedType2 = type2.normalized()
+
+        XCTAssertEqual(normalizedType1.description, "Optional<()>")
+        XCTAssertEqual(normalizedType2.description, "((Int) -> Int) -> String")
+        XCTAssertEqual(normalizedType1.description, "\(((Optional<()>)).self)")
+        XCTAssertEqual(normalizedType2.description, "\((((Int) -> (Int)) -> String).self)")
+    }
+    
+    func testNormalizationNestedArrays() {
+        let type: `Type` = "[[Int]]"
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "Array<Array<Int>>")
+    }
+    
+    func testNormalizationClassRestriction() {
+        let decl: DeclSyntax = """
+            protocol TestProtocol: class { }
+            """
+        
+        guard let inheritedTypes = decl.as(ProtocolDeclSyntax.self)?.inheritanceClause?.inheritedTypes,
+              let classRestrictionTypeSyntax = inheritedTypes.first?.type.as(ClassRestrictionTypeSyntax.self) else {
+            XCTFail("Expected class restriction in inheritance clause")
+            return
+        }
+        
+        let type: `Type` = .classRestriction(.init(classRestrictionTypeSyntax))
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "AnyObject")
+    }
+    
+    func testNormalizationComposition() {
+        let type1: `Type` = "any Decodable & Identifiable"
+        let type2: `Type` = "(inout any Decodable & Identifiable) -> Void"
+        let type3: `Type` = "(inout Decodable & Codable) -> ([Int])"
+        let type4: `Type` = "(Encodable & Sequence<Int?>) & Equatable"
+        
+        let normalizedType1 = type1.normalized()
+        let normalizedType2 = type2.normalized()
+        let normalizedType3 = type3.normalized()
+        let normalizedType4 = type4.normalized()
+
+        XCTAssertEqual(normalizedType1.description, "any Decodable & Identifiable")
+        XCTAssertEqual(normalizedType2.description, "(inout any Decodable & Identifiable) -> ()")
+        XCTAssertEqual(normalizedType3.description, "(inout Decodable & Codable) -> (Array<Int>)")
+        XCTAssertEqual(normalizedType4.description, "(Encodable & Sequence<Optional<Int>>) & Equatable")
+    }
+    
+    func testNormalizationSomeOrAny() {
+        let typeCompsed: `Type` = "any Decodable & Identifiable"
+        let typeGeneric: `Type` = "some Sequence<[String]>"
+        
+        let normalizedTypeComposed = typeCompsed.normalized()
+        let normalizedTypeGeneric = typeGeneric.normalized()
+
+        XCTAssertEqual(normalizedTypeComposed.description, "any Decodable & Identifiable")
+        XCTAssertEqual(normalizedTypeGeneric.description, "some Sequence<Array<String>>")
+    }
+    
+    func testNormalizationSimpleDictionary() {
+        let decl: DeclSyntax = """
+            var items: [String: Int]
+            """
+        
+        guard let variable = Decl(decl).asVariable else {
+            XCTFail("Expected decl to be variable")
+            return
+        }
+        
+        guard let type = variable.bindings[0].type else {
+            XCTFail("Expected type of variable")
+            return
+        }
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "Dictionary<String, Int>")
+    }
+    
+    func testNormalizationDictionaryWithNestedArray() {
+        let type: `Type` = "[String: [[Any]]]"
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "Dictionary<String, Array<Array<Any>>>")
+    }
+    
+    func testNormalizationFunction() {
+        let type: `Type` = "(testParameter: [Int]) -> Void"
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "(testParameter: Array<Int>) -> ()")
+    }
+    
+    func testNormalizationImplicitylUnwrappedOptional() {
+        let type1: `Type` = "MyClass<[String]>!"
+        let type2: `Type` = "((inout [String: Int]) -> Void)!"
+
+        let normalizedType1 = type1.normalized()
+        let normalizedType2 = type2.normalized()
+
+        XCTAssertEqual(normalizedType1.description, "MyClass<Array<String>>!")
+        XCTAssertEqual(normalizedType2.description, "((inout Dictionary<String, Int>) -> ())!")
+    }
+    
+    func testNormalizationMemeberWithGeneric() {
+        let type: `Type` = "(inout TestClass.TestMemberStruct<[any Hashable]>) -> ()"
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "(inout TestClass.TestMemberStruct<Array<any Hashable>>) -> ()")
+    }
+    
+    func testNormalizationMetatype() {
+        let type: `Type` = "(inout TestClass.Type) -> Void"
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "(inout TestClass.Type) -> ()")
+    }
+    
+    func testNormalizationOptional() {
+        let type: `Type` = "((inout Int?) -> Void)?"
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "Optional<((inout Optional<Int>) -> ())>")
+    }
+    
+    func testNormalizationPackExpansion() {
+        let type1: `Type` = "(repeat each Elements)"
+        let type2: `Type` = "(keyPath: KeyPath<(repeat each Elements), Value>) -> Value"
+
+        let normalizedType1 = type1.normalized()
+        let normalizedType2 = type2.normalized()
+
+        XCTAssertEqual(normalizedType1.description, "(repeat each Elements)")
+        XCTAssertEqual(normalizedType2.description, "(keyPath: KeyPath<(repeat each Elements), Value>) -> Value")
+    }
+    
+    func testNormalizationPackReference() {
+        let type: `Type` = "Tuple<each Elements>"
+
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "Tuple<each Elements>")
+    }
+    
+    func testNormalizationSimple() {
+        let type: `Type` = "MyClass<[String]>"
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "MyClass<Array<String>>")
+    }
+    
+    func testNormalizationSuppressed() {
+        let type: `Type` = "~Copyable"
+                
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "~Copyable")
+    }
+    
+    func testNormalizationAttributedTuple() {
+        let declSyntax: DeclSyntax = """
+        let interestingType: (inout [Int], String) -> Float = { _, _ in
+            return 3
+        }
+        """
+
+        guard let variable = Decl(declSyntax).asVariable else {
+            XCTFail("Expected decl to be variable")
+            return
+        }
+        
+        guard let type = variable.bindings[0].type else {
+            XCTFail("Expected type in bindings")
+            return
+        }
+        
+        let normalizedType = type.normalized()
+
+        XCTAssertEqual(normalizedType.description, "(inout Array<Int>, String) -> Float")
+    }
 }
