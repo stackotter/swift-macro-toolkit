@@ -160,4 +160,96 @@ final class DeclGroupTests: XCTestCase {
         XCTAssertEqual(testClass.accessLevel, .public)
         XCTAssertEqual(testClass.declarationContext, nil)
     }
+    
+    func testEnumRawTypeInferredValueString() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: String { case caseOne, caseTwo, caseThree = "case3" }
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 1)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        guard case .string = testEnum.rawRepresentableType else { return XCTFail() }
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), [#""caseOne""#, #""caseTwo""#, #""case3""#])
+    }
+    
+    func testEnumRawTypeInferredValueInt() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: Int { case caseOne = 1, caseTwo, caseThree }
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 1)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        guard case .integer = testEnum.rawRepresentableType else { return XCTFail() }
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1", "2", "3"])
+    }
+    
+    func testEnumRawTypeInferredValueNegativeInt() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: Int { case a = -1, b, c }
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 1)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        guard case .integer = testEnum.rawRepresentableType else { return XCTFail() }
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["-1", "0", "1"])
+    }
+    
+    func testEnumRawTypeInferredValueIntMiddle() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: Int { case a, b = 5, c }
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 1)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        guard case .integer = testEnum.rawRepresentableType else { return XCTFail() }
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["0", "5", "6"])
+    }
+    
+    func testEnumRawTypeInferredValueDouble() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: Double { 
+                case caseOne = 1 
+                case caseTwo
+                case caseThree 
+            }
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 3)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        guard case .floatingPoint = testEnum.rawRepresentableType else { return XCTFail() }
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1", "2", "3"])
+    }
+    
+    func testEnumRawTypeInferredValueDoubleLiteral() throws {
+        let decl: DeclSyntax = """
+            enum TestEnum: Double { 
+                case caseOne = 1.1 
+                case caseTwo = 1.2
+                case caseThree = 1.3
+            }
+            """
+        let enumDecl = decl.as(EnumDeclSyntax.self)!
+        let testEnum = Enum(enumDecl)
+        
+        XCTAssertEqual(testEnum.identifier, "TestEnum")
+        XCTAssertEqual(testEnum.members.count, 3)
+        XCTAssertEqual(testEnum.cases.count, 3)
+        guard case .floatingPoint = testEnum.rawRepresentableType else { return XCTFail() }
+        XCTAssertEqual(testEnum.cases.map(\.rawValueText), ["1.1", "1.2", "1.3"])
+    }
 }
